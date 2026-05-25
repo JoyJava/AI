@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📰 市场情报快报</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0a0e1a;
+    color: #e0e6f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    background: linear-gradient(135deg, #111827 0%, #1a2235 100%);
+    border: 1px solid #2a3550;
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 620px;
+    width: 100%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .header .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #4a90d9;
+    margin-bottom: 8px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f0f4ff;
+    margin-bottom: 6px;
+  }
+
+  .header .date {
+    font-size: 13px;
+    color: #6b7fa3;
+  }
+
+  /* Waveform animation */
+  .waveform {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 48px;
+    margin: 24px 0;
+  }
+
+  .bar {
+    width: 4px;
+    background: linear-gradient(to top, #2563eb, #60a5fa);
+    border-radius: 2px;
+    transition: height 0.1s ease;
+  }
+
+  .bar.idle { height: 6px; opacity: 0.3; }
+
+  @keyframes wave {
+    0%, 100% { height: 8px; }
+    50% { height: var(--peak); }
+  }
+
+  .bar.playing { animation: wave 0.6s ease-in-out infinite; }
+  .bar.playing:nth-child(1)  { animation-delay: 0.0s; --peak: 36px; }
+  .bar.playing:nth-child(2)  { animation-delay: 0.08s; --peak: 44px; }
+  .bar.playing:nth-child(3)  { animation-delay: 0.16s; --peak: 28px; }
+  .bar.playing:nth-child(4)  { animation-delay: 0.24s; --peak: 40px; }
+  .bar.playing:nth-child(5)  { animation-delay: 0.32s; --peak: 20px; }
+  .bar.playing:nth-child(6)  { animation-delay: 0.40s; --peak: 36px; }
+  .bar.playing:nth-child(7)  { animation-delay: 0.48s; --peak: 44px; }
+  .bar.playing:nth-child(8)  { animation-delay: 0.56s; --peak: 30px; }
+  .bar.playing:nth-child(9)  { animation-delay: 0.64s; --peak: 40px; }
+  .bar.playing:nth-child(10) { animation-delay: 0.72s; --peak: 20px; }
+  .bar.playing:nth-child(11) { animation-delay: 0.80s; --peak: 36px; }
+  .bar.playing:nth-child(12) { animation-delay: 0.88s; --peak: 44px; }
+  .bar.playing:nth-child(13) { animation-delay: 0.96s; --peak: 28px; }
+  .bar.playing:nth-child(14) { animation-delay: 0.72s; --peak: 38px; }
+  .bar.playing:nth-child(15) { animation-delay: 0.40s; --peak: 22px; }
+
+  /* Progress */
+  .progress-wrap {
+    background: #1e2d45;
+    border-radius: 8px;
+    height: 6px;
+    margin: 0 0 8px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(to right, #2563eb, #60a5fa);
+    border-radius: 8px;
+    width: 0%;
+    transition: width 0.3s linear;
+  }
+
+  .time-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #4a5a7a;
+    margin-bottom: 24px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .btn-main {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-main:hover { transform: scale(1.06); box-shadow: 0 12px 32px rgba(37,99,235,0.5); }
+  .btn-main:active { transform: scale(0.97); }
+  .btn-main svg { width: 26px; height: 26px; fill: white; }
+
+  .btn-sec {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1e2d45;
+    border: 1px solid #2a3f60;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    color: #8ba3c7;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .btn-sec:hover { background: #263347; color: #c0d0e8; }
+
+  /* Speed & voice */
+  .settings-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .settings-row label {
+    font-size: 11px;
+    color: #4a5a7a;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .settings-row select, .settings-row input[type=range] {
+    background: #1e2d45;
+    border: 1px solid #2a3f60;
+    border-radius: 8px;
+    color: #c0d0e8;
+    font-size: 13px;
+    padding: 6px 10px;
+    width: 100%;
+  }
+
+  .setting-box { flex: 1; min-width: 120px; }
+
+  /* Chapters */
+  .chapters {
+    background: #0d1525;
+    border-radius: 12px;
+    padding: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .chapters h3 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #4a5a7a;
+    margin-bottom: 12px;
+  }
+
+  .chapter-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: #8ba3c7;
+  }
+  .chapter-item:hover { background: #1a2a40; color: #c0d0e8; }
+  .chapter-item.active { background: #1a3060; color: #60a5fa; font-weight: 600; }
+
+  .chapter-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #2a3f60;
+    flex-shrink: 0;
+  }
+  .chapter-item.active .chapter-dot { background: #2563eb; box-shadow: 0 0 6px #2563eb; }
+
+  /* Scrollbar */
+  .chapters::-webkit-scrollbar { width: 4px; }
+  .chapters::-webkit-scrollbar-track { background: transparent; }
+  .chapters::-webkit-scrollbar-thumb { background: #2a3f60; border-radius: 4px; }
+
+  .status-text {
+    text-align: center;
+    font-size: 13px;
+    color: #4a5a7a;
+    margin-bottom: 16px;
+    min-height: 18px;
+  }
+
+  /* Charts */
+  .chart-section {
+    margin-top: 24px;
+    background: #0d1525;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #4a5a7a;
+    margin-bottom: 6px;
+  }
+  .chart-subtitle {
+    font-size: 12px;
+    color: #3a4a6a;
+    margin-bottom: 14px;
+  }
+  .chart-wrap { position: relative; height: 180px; margin-bottom: 20px; }
+  .chart-wrap:last-child { margin-bottom: 0; }
+  .breadth-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .breadth-card {
+    flex: 1;
+    min-width: 100px;
+    background: #111e33;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid #1e2d45;
+  }
+  .breadth-card .bc-label { font-size: 10px; color: #4a5a7a; letter-spacing: 1px; text-transform: uppercase; }
+  .breadth-card .bc-val { font-size: 22px; font-weight: 700; margin: 2px 0; }
+  .breadth-card .bc-sub { font-size: 11px; color: #4a5a7a; }
+  .bc-green { color: #22c55e; }
+  .bc-yellow { color: #eab308; }
+  .bc-red { color: #ef4444; }
+  .liquidity-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .tag-loose { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+  .tag-neutral { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+  .tag-tight { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+  .liq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .liq-item {
+    background: #111e33;
+    border-radius: 8px;
+    padding: 8px 10px;
+    border: 1px solid #1e2d45;
+  }
+  .liq-item .li-label { font-size: 10px; color: #4a5a7a; text-transform: uppercase; letter-spacing: 1px; }
+  .liq-item .li-val { font-size: 14px; font-weight: 700; color: #c0d0e8; margin: 2px 0; }
+  .liq-item .li-chg { font-size: 11px; }
+  .li-up { color: #22c55e; }
+  .li-dn { color: #ef4444; }
+  .liq-conclusion {
+    margin-top: 10px;
+    background: #111e33;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #8ba3c7;
+    line-height: 1.6;
+    border-left: 3px solid #2563eb;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="label">Global Market Intelligence</div>
+    <h1>📰 今日市场情报简报</h1>
+    <div class="date" id="dateLabel"></div>
+  </div>
+
+  <div class="waveform" id="waveform">
+    <!-- 15 bars -->
+    <div class="bar idle"></div><div class="bar idle"></div><div class="bar idle"></div>
+    <div class="bar idle"></div><div class="bar idle"></div><div class="bar idle"></div>
+    <div class="bar idle"></div><div class="bar idle"></div><div class="bar idle"></div>
+    <div class="bar idle"></div><div class="bar idle"></div><div class="bar idle"></div>
+    <div class="bar idle"></div><div class="bar idle"></div><div class="bar idle"></div>
+  </div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="time-row">
+    <span id="timeElapsed">0:00</span>
+    <span id="timeTotal">--:--</span>
+  </div>
+
+  <div class="status-text" id="statusText">准备播放</div>
+
+  <div class="controls">
+    <button class="btn-sec" id="btnRestart" title="从头播放">↺</button>
+    <button class="btn-main" id="btnPlay">
+      <!-- Play icon -->
+      <svg viewBox="0 0 24 24" id="iconPlay"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="btn-sec" id="btnStop" title="停止">■</button>
+  </div>
+
+  <div class="settings-row">
+    <div class="setting-box">
+      <label>朗读速度</label>
+      <select id="speedSelect">
+        <option value="0.8">0.8x 慢速</option>
+        <option value="0.9">0.9x 略慢</option>
+        <option value="1.0" selected>1.0x 正常</option>
+        <option value="1.2">1.2x</option>
+        <option value="1.3">1.3x</option>
+        <option value="1.4">1.4x</option>
+        <option value="1.5">1.5x</option>
+        <option value="1.6">1.6x</option>
+        <option value="1.7">1.7x</option>
+        <option value="1.8">1.8x</option>
+        <option value="2.0">2.0x 极速</option>
+      </select>
+    </div>
+    <div class="setting-box">
+      <label>语音选择</label>
+      <select id="voiceSelect"></select>
+    </div>
+  </div>
+
+  <div class="chapters" id="chaptersBox">
+    <h3>章节</h3>
+    <div id="chapterList"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!--  J. 技术指标面板                          -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="chart-section">
+    <h3>📊 技术指标</h3>
+
+    <!-- J-1 市场参与度 -->
+    <div style="margin-bottom:18px">
+      <div class="chart-subtitle">市场参与度（Breadth）</div>
+      <div class="breadth-row" id="breadthCards">
+        <!-- Injected by JS from CHART_DATA -->
+      </div>
+    </div>
+
+    <!-- J-2 美联储流动性 -->
+    <div style="margin-bottom:18px">
+      <div class="chart-subtitle">美联储流动性</div>
+      <div id="liqTag"></div>
+      <div class="liq-grid" id="liqGrid"></div>
+      <div style="margin-top:10px;margin-bottom:6px;font-size:11px;color:#4a5a7a;letter-spacing:1px;text-transform:uppercase">利率差</div>
+      <div class="liq-grid" id="spreadsGrid"></div>
+      <div class="liq-conclusion" id="liqConclusion"></div>
+    </div>
+
+    <!-- J-3 链上盈利地址占比趋势图 -->
+    <div>
+      <div class="chart-subtitle">链上盈利地址占比（% In Profit）</div>
+      <div class="chart-wrap">
+        <canvas id="onchainChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+// ★ INJECT CHART DATA HERE ★
+// Fill in the actual numbers from search results before rendering.
+// ─────────────────────────────────────────────────────────────
+const CHART_DATA = {
+  // J-1 市场参与度
+  breadth: [
+    { label: "SPX >50MA",  val: 0,   sub: "成分股 高于50日均线" },
+    { label: "SPX >200MA", val: 0,   sub: "成分股 高于200日均线" },
+    { label: "NDX >50MA",  val: 0,   sub: "成分股 高于50日均线" },
+    { label: "NDX >200MA", val: 0,   sub: "成分股 高于200日均线" },
+  ],
+  // J-2 美联储流动性
+  liquidity: {
+    tag: "中性",          // "宽松" | "中性偏宽松" | "中性" | "偏紧" | "收紧"
+    tagClass: "tag-neutral", // "tag-loose" | "tag-neutral" | "tag-tight"
+    items: [
+      { label: "美联储资产负债表", val: "-- 万亿", chg: "--", up: false },
+      { label: "逆回购 RRP 余额",  val: "-- 亿",   chg: "--", up: true  },
+      { label: "商业银行准备金",   val: "-- 万亿",  chg: "--", up: true  },
+      { label: "M2 同比增速",      val: "--%",      chg: "--", up: true  },
+    ],
+    // 利率差指标 — 新增
+    spreads: [
+      { label: "2s10s 利差",    val: "--bps", signal: "正常", ok: true  },
+      { label: "HY 信用利差",   val: "--bps", signal: "健康", ok: true  },
+      { label: "IG 信用利差",   val: "--bps", signal: "正常", ok: true  },
+      { label: "30Y 抵押贷款",  val: "--%",  signal: "--",   ok: true  },
+    ],
+    conclusion: "数据更新中，请稍候。"
+  },
+  // J-3 链上盈利地址占比 — 过去6周数据
+  onchain: {
+    labels: ["5周前","4周前","3周前","2周前","1周前","今日"],
+    btc:    [0, 0, 0, 0, 0, 0],   // % 整数，如 72
+    eth:    [0, 0, 0, 0, 0, 0],
+  }
+};
+// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// ★ INJECT BRIEFING TEXT HERE ★
+// Replace the content below with the actual audio script.
+// Use plain text, no markdown. Numbers in spoken Chinese form.
+// ─────────────────────────────────────────────────────────────
+const BRIEFING_TEXT = `[INJECT_AUDIO_SCRIPT_HERE]`;
+
+// Chapter markers — define start character positions for each section
+// Format: { label: "章节名", startText: "该章节开头的若干字" }
+const CHAPTERS = [
+  { label: "🌍 国际要闻",   startText: "国际要闻" },
+  { label: "📊 宏观财经",   startText: "宏观财经" },
+  { label: "₿ 加密货币",   startText: "加密货币" },
+  { label: "📈 美股动态",   startText: "美股动态" },
+  { label: "👑 大佬观点",   startText: "大佬观点" },
+  { label: "🧠 编辑点评",   startText: "编辑点评" },
+];
+// ─────────────────────────────────────────────────────────────
+
+// Split text into sentences for progress tracking
+const sentences = BRIEFING_TEXT.split(/(?<=[。！？；.!?])\s*/g).filter(s => s.trim().length > 2);
+
+let synth = window.speechSynthesis;
+let voices = [];
+let currentIdx = 0;
+let isPlaying = false;
+let startTime = null;
+let elapsed = 0;
+let estimatedTotal = 0;
+let progressTimer = null;
+let chapterMarkers = [];
+
+// Date label
+document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('zh-CN', {
+  year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+});
+
+// Load voices
+function loadVoices() {
+  voices = synth.getVoices();
+  const sel = document.getElementById('voiceSelect');
+  sel.innerHTML = '';
+  // Prefer Chinese voices
+  const zh = voices.filter(v => v.lang.startsWith('zh'));
+  const all = zh.length > 0 ? zh : voices;
+  all.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name.replace('Microsoft ', '').replace(' Online (Natural)', '');
+    if (v.default) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Auto-select first Chinese voice if available
+  if (zh.length > 0) sel.selectedIndex = 0;
+}
+synth.onvoiceschanged = loadVoices;
+loadVoices();
+
+// Build chapter markers
+function buildChapters() {
+  chapterMarkers = [];
+  CHAPTERS.forEach(ch => {
+    const idx = sentences.findIndex(s => s.includes(ch.startText));
+    if (idx >= 0) chapterMarkers.push({ ...ch, idx });
+  });
+
+  const list = document.getElementById('chapterList');
+  list.innerHTML = '';
+  if (chapterMarkers.length === 0) {
+    list.innerHTML = '<div style="color:#4a5a7a;font-size:13px">（无章节标记）</div>';
+    return;
+  }
+  chapterMarkers.forEach((ch, i) => {
+    const el = document.createElement('div');
+    el.className = 'chapter-item';
+    el.id = `ch-${i}`;
+    el.innerHTML = `<div class="chapter-dot"></div><span>${ch.label}</span>`;
+    el.onclick = () => jumpToChapter(i);
+    list.appendChild(el);
+  });
+}
+
+function jumpToChapter(i) {
+  stop();
+  currentIdx = chapterMarkers[i].idx;
+  playFrom(currentIdx);
+}
+
+// Estimate total duration
+function estimateDuration() {
+  const speed = parseFloat(document.getElementById('speedSelect').value);
+  const charCount = BRIEFING_TEXT.length;
+  const charsPerSec = 4.5 * speed; // ~4.5 chars/sec for Chinese TTS
+  estimatedTotal = charCount / charsPerSec;
+  document.getElementById('timeTotal').textContent = formatTime(estimatedTotal);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+function setWave(active) {
+  document.querySelectorAll('.bar').forEach(b => {
+    b.className = 'bar ' + (active ? 'playing' : 'idle');
+  });
+}
+
+function updateIcon(playing) {
+  document.getElementById('iconPlay').innerHTML = playing
+    ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'  // pause
+    : '<path d="M8 5v14l11-7z"/>';                       // play
+}
+
+function updateStatus(text) {
+  document.getElementById('statusText').textContent = text;
+}
+
+function updateChapterHighlight(sentenceIdx) {
+  document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
+  // Find which chapter we're in
+  let active = -1;
+  chapterMarkers.forEach((ch, i) => {
+    if (sentenceIdx >= ch.idx) active = i;
+  });
+  if (active >= 0) {
+    const el = document.getElementById(`ch-${active}`);
+    if (el) {
+      el.classList.add('active');
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+}
+
+function startProgressTimer() {
+  startTime = Date.now() - elapsed * 1000;
+  progressTimer = setInterval(() => {
+    elapsed = (Date.now() - startTime) / 1000;
+    const pct = Math.min(elapsed / estimatedTotal * 100, 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('timeElapsed').textContent = formatTime(elapsed);
+  }, 300);
+}
+
+function stopProgressTimer() {
+  clearInterval(progressTimer);
+  progressTimer = null;
+}
+
+function playFrom(idx) {
+  if (!synth) return updateStatus('浏览器不支持语音合成');
+
+  const speed = parseFloat(document.getElementById('speedSelect').value);
+  const voiceIdx = document.getElementById('voiceSelect').selectedIndex;
+  const voiceList = voices.filter(v => v.lang.startsWith('zh'));
+  const voicePool = voiceList.length > 0 ? voiceList : voices;
+  const selectedVoice = voicePool[voiceIdx] || voicePool[0];
+
+  isPlaying = true;
+  updateIcon(true);
+  setWave(true);
+  estimateDuration();
+  startProgressTimer();
+  currentIdx = idx;
+
+  function speakNext() {
+    if (currentIdx >= sentences.length || !isPlaying) {
+      finish();
+      return;
+    }
+
+    const sentence = sentences[currentIdx];
+    updateStatus(sentence.length > 30 ? sentence.slice(0, 30) + '…' : sentence);
+    updateChapterHighlight(currentIdx);
+
+    const utt = new SpeechSynthesisUtterance(sentence);
+    utt.rate = speed;
+    utt.pitch = 1.0;
+    if (selectedVoice) utt.voice = selectedVoice;
+    utt.lang = 'zh-CN';
+
+    utt.onend = () => {
+      currentIdx++;
+      speakNext();
+    };
+    utt.onerror = (e) => {
+      if (e.error !== 'interrupted') { currentIdx++; speakNext(); }
+    };
+
+    synth.speak(utt);
+  }
+
+  speakNext();
+}
+
+function finish() {
+  isPlaying = false;
+  stopProgressTimer();
+  setWave(false);
+  updateIcon(false);
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('timeElapsed').textContent = formatTime(estimatedTotal);
+  updateStatus('播放完毕 ✓');
+  document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
+}
+
+function stop() {
+  isPlaying = false;
+  synth.cancel();
+  stopProgressTimer();
+  setWave(false);
+  updateIcon(false);
+  elapsed = 0;
+  currentIdx = 0;
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('timeElapsed').textContent = '0:00';
+  updateStatus('已停止');
+}
+
+// Button events
+document.getElementById('btnPlay').onclick = () => {
+  if (isPlaying) {
+    // Pause
+    isPlaying = false;
+    synth.cancel();
+    stopProgressTimer();
+    setWave(false);
+    updateIcon(false);
+    updateStatus('已暂停');
+  } else {
+    playFrom(currentIdx);
+  }
+};
+
+document.getElementById('btnStop').onclick = stop;
+
+document.getElementById('btnRestart').onclick = () => {
+  stop();
+  setTimeout(() => playFrom(0), 100);
+};
+
+document.getElementById('speedSelect').onchange = () => {
+  if (isPlaying) {
+    synth.cancel();
+    stopProgressTimer();
+    setTimeout(() => playFrom(currentIdx), 50);
+  }
+  estimateDuration();
+};
+
+// Init
+buildChapters();
+estimateDuration();
+
+// ─── J. 技术指标渲染 ───────────────────────────────────────────
+
+function colorByVal(v) {
+  if (v >= 70) return '#22c55e';
+  if (v >= 50) return '#eab308';
+  return '#ef4444';
+}
+
+function renderBreadth() {
+  const el = document.getElementById('breadthCards');
+  if (!el) return;
+  el.innerHTML = CHART_DATA.breadth.map(b => {
+    const col = colorByVal(b.val);
+    const cls = b.val >= 70 ? 'bc-green' : b.val >= 50 ? 'bc-yellow' : 'bc-red';
+    const sig = b.val >= 70 ? '强势' : b.val >= 50 ? '中性' : b.val >= 30 ? '走弱' : '熊市';
+    return `<div class="breadth-card">
+      <div class="bc-label">${b.label}</div>
+      <div class="bc-val ${cls}">${b.val > 0 ? b.val + '%' : '--'}</div>
+      <div class="bc-sub">${b.val > 0 ? sig + ' · ' + b.sub : b.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLiquidity() {
+  const liq = CHART_DATA.liquidity;
+  const tagEl = document.getElementById('liqTag');
+  const gridEl = document.getElementById('liqGrid');
+  const spreadsEl = document.getElementById('spreadsGrid');
+  const concEl = document.getElementById('liqConclusion');
+  if (!tagEl) return;
+  tagEl.innerHTML = `<span class="liquidity-tag ${liq.tagClass}">${liq.tag}</span>`;
+  gridEl.innerHTML = liq.items.map(item => `
+    <div class="liq-item">
+      <div class="li-label">${item.label}</div>
+      <div class="li-val">${item.val}</div>
+      <div class="li-chg ${item.up ? 'li-up' : 'li-dn'}">${item.chg}</div>
+    </div>`).join('');
+  if (spreadsEl && liq.spreads) {
+    spreadsEl.innerHTML = liq.spreads.map(s => `
+      <div class="liq-item">
+        <div class="li-label">${s.label}</div>
+        <div class="li-val">${s.val}</div>
+        <div class="li-chg ${s.ok ? 'li-up' : 'li-dn'}">${s.signal}</div>
+      </div>`).join('');
+  }
+  concEl.textContent = liq.conclusion;
+}
+
+function renderOnchain() {
+  const ctx = document.getElementById('onchainChart');
+  if (!ctx || typeof Chart === 'undefined') return;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: CHART_DATA.onchain.labels,
+      datasets: [
+        {
+          label: 'BTC 盈利地址 %',
+          data: CHART_DATA.onchain.btc,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#3b82f6',
+          fill: true,
+        },
+        {
+          label: 'ETH 盈利地址 %',
+          data: CHART_DATA.onchain.eth,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,0.08)',
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#f97316',
+          fill: true,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#8ba3c7', font: { size: 11 }, boxWidth: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(42,63,96,0.4)' },
+          ticks: { color: '#4a5a7a', font: { size: 10 } }
+        },
+        y: {
+          min: 40,
+          max: 100,
+          grid: { color: 'rgba(42,63,96,0.4)' },
+          ticks: {
+            color: '#4a5a7a',
+            font: { size: 10 },
+            callback: v => v + '%'
+          }
+        }
+      }
+    }
+  });
+}
+
+// Render all charts after a short delay (wait for Chart.js to load)
+function initCharts() {
+  if (typeof Chart !== 'undefined') {
+    renderBreadth();
+    renderLiquidity();
+    renderOnchain();
+  } else {
+    setTimeout(initCharts, 300);
+  }
+}
+initCharts();
+</script>
+</body>
+</html>

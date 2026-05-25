@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "X(Twitter) 推文智能抓取器",
+  "version": "1.0",
+  "description": "自动抓取并导出 X 上的推文数据，支持智能过滤与本地缓存断点续传。",
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "*://x.com/*",
+    "*://twitter.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

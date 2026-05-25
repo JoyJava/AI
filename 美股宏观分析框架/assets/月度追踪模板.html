@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美股宏观经济传导链诊断 | 2026-04-18</title>
+<style>
+:root {
+  --red: #dc2626; --orange: #ea580c; --yellow: #ca8a04; --green: #16a34a;
+  --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
+  --accent: #38bdf8; --purple:#8b5cf6;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); line-height:1.6; }
+.container { max-width:1360px; margin:0 auto; padding:20px; }
+h1 { font-size:1.8em; margin-bottom:8px; }
+h2 { font-size:1.4em; margin:32px 0 16px; padding-bottom:8px; border-bottom:2px solid var(--accent); color:var(--accent); }
+h3 { font-size:1.1em; margin:20px 0 10px; color:#f1f5f9; }
+h4 { font-size:1em; margin:14px 0 8px; color:#cbd5e1; }
+
+.header { text-align:center; padding:40px 20px; border-bottom:1px solid var(--border); }
+.header .verdict { font-size:2.5em; margin:16px 0; }
+.header .subtitle { color:var(--muted); font-size:1.1em; }
+
+.badge { display:inline-block; padding:4px 12px; border-radius:12px; font-size:0.85em; font-weight:600; }
+.badge-red { background:rgba(220,38,38,0.2); color:#fca5a5; border:1px solid rgba(220,38,38,0.4); }
+.badge-orange { background:rgba(234,88,12,0.2); color:#fdba74; border:1px solid rgba(234,88,12,0.4); }
+.badge-yellow { background:rgba(202,138,4,0.2); color:#fde047; border:1px solid rgba(202,138,4,0.4); }
+.badge-green { background:rgba(22,163,74,0.2); color:#86efac; border:1px solid rgba(22,163,74,0.4); }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; margin:16px 0; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid2,.grid3 { grid-template-columns:1fr; } }
+
+table { width:100%; border-collapse:collapse; margin:12px 0; font-size:0.9em; }
+th { background:#1a2744; text-align:left; padding:10px 12px; border:1px solid var(--border); color:var(--accent); font-weight:600; vertical-align:top; }
+td { padding:10px 12px; border:1px solid var(--border); vertical-align:top; }
+tr:nth-child(even) { background:rgba(255,255,255,0.02); }
+.signal { font-size:1.2em; }
+
+.dot-r, .dot-o, .dot-y, .dot-g { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.dot-r { background:var(--red); }
+.dot-o { background:var(--orange); }
+.dot-y { background:var(--yellow); }
+.dot-g { background:var(--green); }
+
+/* —— 全景条（顶部） —— */
+.stage-indicator { display:flex; align-items:center; gap:4px; margin:16px 0; flex-wrap:wrap; }
+.stage-box { min-width:82px; height:44px; padding:0 8px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:0.78em; font-weight:600; color:white; position:relative; cursor:pointer; user-select:none; }
+.stage-box:hover { transform:translateY(-2px); transition:transform 0.15s; }
+.stage-arrow { color:var(--muted); font-size:0.8em; }
+.stage-box.red { background:rgba(220,38,38,0.55); border:1px solid var(--red); }
+.stage-box.orange { background:rgba(234,88,12,0.55); border:1px solid var(--orange); }
+.stage-box.yellow { background:rgba(202,138,4,0.55); border:1px solid var(--yellow); }
+.stage-box.green { background:rgba(22,163,74,0.55); border:1px solid var(--green); }
+.stage-box.active { box-shadow:0 0 0 2px var(--accent), 0 0 16px rgba(56,189,248,0.5); }
+
+/* —— 左右分栏布局 —— */
+.split { display:grid; grid-template-columns:240px 1fr; gap:24px; margin:24px 0; }
+@media(max-width:960px) { .split { grid-template-columns:1fr; } }
+
+.side-nav { position:sticky; top:16px; align-self:start; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px; max-height:calc(100vh - 32px); overflow-y:auto; }
+@media(max-width:960px) { .side-nav { position:static; max-height:none; } }
+
+.side-btn {
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:10px 12px;
+  border:none; background:transparent; color:var(--text); cursor:pointer; border-radius:8px;
+  margin-bottom:2px; font-family:inherit; font-size:0.92em; transition:all 0.15s; border-left:3px solid transparent;
+}
+.side-btn:hover { background:rgba(56,189,248,0.1); }
+.side-btn.active { background:rgba(56,189,248,0.15); color:var(--accent); border-left-color:var(--accent); font-weight:600; }
+.side-btn .num { display:inline-block; min-width:22px; height:22px; line-height:22px; border-radius:50%; background:#334155; color:white; text-align:center; font-size:0.78em; font-weight:700; }
+.side-btn.active .num { background:var(--accent); color:var(--bg); }
+.side-btn .lamp { font-size:0.9em; }
+.side-btn .lbl { flex:1; }
+
+.content-area { min-width:0; }
+.tab-panel { display:none; animation:fadeIn 0.2s ease; }
+.tab-panel.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+/* —— 指标 tooltip —— */
+.info {
+  display:inline-block; width:16px; height:16px; line-height:14px; text-align:center;
+  border:1px solid var(--muted); border-radius:50%; font-size:0.7em; color:var(--muted);
+  cursor:help; margin-left:4px; vertical-align:middle; font-weight:700; font-family:Georgia,serif;
+  position:relative;
+}
+.info:hover { background:var(--accent); color:var(--bg); border-color:var(--accent); }
+.info:hover::after {
+  content: attr(data-tip); position:absolute; left:50%; top:calc(100% + 8px);
+  transform:translateX(-50%); background:#0b1220; color:var(--text); border:1px solid var(--accent);
+  padding:10px 14px; border-radius:6px; font-size:0.85em; font-weight:400;
+  width:340px; text-align:left; line-height:1.55; z-index:1000;
+  box-shadow:0 8px 24px rgba(0,0,0,0.7); white-space:normal;
+}
+.info:hover::before {
+  content:''; position:absolute; left:50%; top:calc(100% + 3px);
+  transform:translateX(-50%); border:6px solid transparent; border-bottom-color:var(--accent); z-index:1001;
+}
+
+/* 数据链接 */
+a.src { color:var(--text); text-decoration:none; border-bottom:1px dotted var(--accent); }
+a.src:hover { color:var(--accent); border-bottom-style:solid; }
+a.src strong { color:inherit; }
+
+/* —— 核实状态（2 档） —— */
+.verify { font-size:0.7em; padding:2px 6px; border-radius:4px; font-weight:600; white-space:nowrap; }
+.v-ok { background:rgba(22,163,74,0.2); color:#86efac; border:1px solid rgba(22,163,74,0.4); }
+.v-warn { background:rgba(202,138,4,0.2); color:#fde047; border:1px solid rgba(202,138,4,0.4); }
+.earnings-mark { color:var(--accent); margin-right:2px; font-size:0.9em; } /* 小图标暗示财报源 */
+
+.era3 { background:rgba(139,92,246,0.2); color:#c4b5fd; border:1px solid rgba(139,92,246,0.4); padding:1px 6px; border-radius:4px; font-size:0.7em; margin-left:4px; font-weight:600; }
+
+/* —— 指标分类标签（领先/同步/滞后） —— */
+.lead-tag { display:inline-block; font-size:0.68em; padding:1px 5px; border-radius:3px; font-weight:700; margin-right:4px; vertical-align:middle; }
+.lead-lead { background:rgba(56,189,248,0.2); color:#7dd3fc; border:1px solid rgba(56,189,248,0.4); }
+.lead-sync { background:rgba(139,92,246,0.2); color:#c4b5fd; border:1px solid rgba(139,92,246,0.4); }
+.lead-lag  { background:rgba(148,163,184,0.2); color:#cbd5e1; border:1px solid rgba(148,163,184,0.4); }
+
+/* —— 阶段头部 —— */
+.stage-header { padding:18px 22px; border-radius:12px 12px 0 0; }
+.stage-header.red { background:rgba(220,38,38,0.15); border:1px solid rgba(220,38,38,0.4); border-bottom:none; }
+.stage-header.orange { background:rgba(234,88,12,0.15); border:1px solid rgba(234,88,12,0.4); border-bottom:none; }
+.stage-header.yellow { background:rgba(202,138,4,0.15); border:1px solid rgba(202,138,4,0.4); border-bottom:none; }
+.stage-header.green { background:rgba(22,163,74,0.15); border:1px solid rgba(22,163,74,0.4); border-bottom:none; }
+.stage-title { font-size:1.25em; margin-bottom:6px; }
+.stage-q { color:var(--muted); font-size:0.95em; }
+.stage-body { border:1px solid var(--border); border-top:none; border-radius:0 0 12px 12px; padding:20px 22px; background:var(--card); }
+
+/* —— 详细结论三段 —— */
+.verdict-block { display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:20px; }
+.verdict-card { padding:14px 16px; border-radius:8px; border-left:4px solid; }
+.verdict-card.concl { background:rgba(56,189,248,0.08); border-left-color:var(--accent); }
+.verdict-card.logic { background:rgba(139,92,246,0.08); border-left-color:var(--purple); }
+.verdict-card.action { background:rgba(234,88,12,0.08); border-left-color:var(--orange); }
+.verdict-card strong.lbl { display:block; margin-bottom:6px; font-size:0.9em; letter-spacing:0.5px; }
+.verdict-card.concl strong.lbl { color:var(--accent); }
+.verdict-card.logic strong.lbl { color:#c4b5fd; }
+.verdict-card.action strong.lbl { color:#fdba74; }
+.verdict-card ul { margin:4px 0 0 18px; }
+.verdict-card li { margin-bottom:4px; }
+
+/* 三列对比背景 */
+.col-2000 { background:rgba(139,92,246,0.05); }
+.col-2008 { background:rgba(220,38,38,0.05); }
+.col-now { background:rgba(56,189,248,0.1); font-weight:600; }
+
+.important { background:rgba(220,38,38,0.15); border:1px solid rgba(220,38,38,0.3); border-radius:8px; padding:16px; margin:16px 0; }
+.note { font-size:0.85em; color:var(--muted); font-style:italic; }
+.legend-row { display:flex; flex-wrap:wrap; gap:12px; margin:12px 0; font-size:0.85em; color:var(--muted); }
+
+.cmp-table th, .cmp-table td { text-align:left; }
+.cmp-table th:first-child { width:32%; }
+.cmp-table th:nth-child(2) { width:18%; }
+.cmp-table th:nth-child(3) { width:18%; }
+.cmp-table th:nth-child(4) { width:24%; }
+.cmp-table th:nth-child(5) { width:8%; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>美股宏观经济传导链诊断</h1>
+  <div class="subtitle">分析日期：2026-04-18 | 框架版本：v7.0（左右分栏 / 详细结论 / 指标分类）</div>
+  <div class="verdict">🟠 显著减仓</div>
+  <div style="margin:8px 0;">
+    <span class="badge badge-orange">建议美股仓位 50-60%</span>
+    <span class="badge badge-yellow">当前压力位置：阶段 9-10</span>
+    <span class="badge badge-red">阶段 11 曾短暂触发（VIX 60）</span>
+  </div>
+  <div class="note" style="margin-top:12px;">
+    阅读方式：点击顶部阶段条或左侧导航切换。每个阶段含
+    <strong>结论 / 判断思路 / 行动建议</strong> 三段+指标 2000/2008/当前 三列对比。
+    指标按 <span class="lead-tag lead-lead">领先</span>
+    <span class="lead-tag lead-sync">同步</span>
+    <span class="lead-tag lead-lag">滞后</span> 标注。
+    <span class="info" data-tip="领先：提前 3-12 个月反映拐点；同步：与经济同步变化；滞后：经济变化后才显现。">i</span>
+  </div>
+  <div class="legend-row" style="justify-content:center;">
+    <span><span class="verify v-ok">✅ 已核实</span> 官方机构 / 上市公司 SEC 文件</span>
+    <span><span class="verify v-warn">⚠️ 未核实</span> 估算 / 行业协会 / 公开数据不可得</span>
+    <span><span class="earnings-mark">🏛️</span> 财报直取（10-K/10-Q/8-K）</span>
+    <span><span class="era3">三届幸存</span> 2000/2008/2026 持续上市</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ========== 传导链全景 ========== -->
+<h2 id="panorama">一、传导链全景</h2>
+<p>点击任意阶段进入详情。颜色表示当前压力等级：
+<span class="dot-r"></span>红灯（严重）·
+<span class="dot-o"></span>橙灯（显著）·
+<span class="dot-y"></span>黄灯（预警）·
+<span class="dot-g"></span>绿灯（正常）</p>
+
+<div class="stage-indicator" id="stage-bar">
+  <div class="stage-box orange" data-tab="t1">1 收入</div><div class="stage-arrow">→</div>
+  <div class="stage-box red" data-tab="t2">2 储蓄</div><div class="stage-arrow">→</div>
+  <div class="stage-box red" data-tab="t3">3 举债</div><div class="stage-arrow">→</div>
+  <div class="stage-box red" data-tab="t4">4 消费</div><div class="stage-arrow">→</div>
+  <div class="stage-box orange" data-tab="t5">5 信用</div><div class="stage-arrow">→</div>
+  <div class="stage-box red" data-tab="t6">6 踢出</div><div class="stage-arrow">→</div>
+  <div class="stage-box red" data-tab="t7">7 硬资产</div><div class="stage-arrow">→</div>
+  <div class="stage-box orange" data-tab="t8">8 退出</div><div class="stage-arrow">→</div>
+  <div class="stage-box orange" data-tab="t9">9 银行</div><div class="stage-arrow">→</div>
+  <div class="stage-box orange" data-tab="t10">10 实体</div><div class="stage-arrow">→</div>
+  <div class="stage-box orange" data-tab="t11">11 市场</div>
+</div>
+
+<div class="card">
+<strong>信号灯统计：</strong><span class="dot-r"></span>红 × 5 · <span class="dot-o"></span>橙 × 6 · <span class="dot-y"></span>黄 × 0 · <span class="dot-g"></span>绿 × 0
+<br><strong>核心判断：</strong>前端压力（1-4 收入/储蓄/举债/消费）已严重；中段（5-7）出现混合信号——银行主动收紧（阶段 6）让系统内信用质量（阶段 5）改善，但被踢出系统的人流向影子信贷+硬资产损失（阶段 7）破纪录；后端（8-10）橙灯确认；市场端（阶段 11）估值接近 2000 年，且年内因地缘事件 VIX 曾飙至 60，已有过一次短暂触发。
+</div>
+
+<!-- ========== 左右分栏：导航 + 内容 ========== -->
+<h2 id="stages">二、逐阶段诊断（2000 / 2008 / 当前 对比）</h2>
+
+<div class="split">
+  <!-- 左侧：纵向阶段导航 -->
+  <div class="side-nav" id="side-nav">
+    <button class="side-btn active" data-tab="t1"><span class="num">1</span><span class="lamp">🟠</span><span class="lbl">收入端</span></button>
+    <button class="side-btn" data-tab="t2"><span class="num">2</span><span class="lamp">🔴</span><span class="lbl">储蓄耗尽</span></button>
+    <button class="side-btn" data-tab="t3"><span class="num">3</span><span class="lamp">🔴</span><span class="lbl">举债求生</span></button>
+    <button class="side-btn" data-tab="t4"><span class="num">4</span><span class="lamp">🔴</span><span class="lbl">消费降级</span></button>
+    <button class="side-btn" data-tab="t5"><span class="num">5</span><span class="lamp">🟠</span><span class="lbl">系统内信用</span></button>
+    <button class="side-btn" data-tab="t6"><span class="num">6</span><span class="lamp">🔴</span><span class="lbl">被踢出系统</span></button>
+    <button class="side-btn" data-tab="t7"><span class="num">7</span><span class="lamp">🔴</span><span class="lbl">硬资产损失</span></button>
+    <button class="side-btn" data-tab="t8"><span class="num">8</span><span class="lamp">🟠</span><span class="lbl">正式退出</span></button>
+    <button class="side-btn" data-tab="t9"><span class="num">9</span><span class="lamp">🟠</span><span class="lbl">银行暴露</span></button>
+    <button class="side-btn" data-tab="t10"><span class="num">10</span><span class="lamp">🟠</span><span class="lbl">实体经济</span></button>
+    <button class="side-btn" data-tab="t11"><span class="num">11</span><span class="lamp">🟠</span><span class="lbl">市场重定价</span></button>
+  </div>
+
+  <!-- 右侧：阶段内容 -->
+  <div class="content-area">
+
+  <!-- ==================== 阶段 1：收入端 ==================== -->
+  <div class="tab-panel active" id="t1">
+    <div class="stage-header orange">
+      <div class="stage-title">🟠 阶段 1：收入端压力</div>
+      <div class="stage-q">核心问题：底层是否还有足够的现金流入？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          招聘率 3.1% 创 2020-04 以来最低，辞职率降至 1.9%（工人不敢换工作），多职工作者 850 万创历史新高。工资端压力已经出现，但失业率 4.1% 尚未像 2008 那样急升——<strong>目前是"就业质量"恶化而非"就业数量"崩塌</strong>。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>看<strong>领先指标</strong>（JOLTS 辞职/招聘率）而非滞后指标（失业率），因为失业率往往在衰退中期才急升；</li>
+            <li>对比 2007 年：辞职率从 2.2% 降到 1.4% 的过程早于失业率上升 6-12 个月；</li>
+            <li>看<strong>底层 20%</strong> 工资增速而非平均工资，避免高收入拉高均值掩盖 K 型分化；</li>
+            <li>多职工作者 850 万创新高：要么工资不够生活（压力），要么零工经济渗透（结构），需结合 involuntary part-time 数据交叉验证——当前两者共同推高。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li><strong>监控触发器</strong>：招聘率跌破 3.0%（已极接近）→ 劳动力市场拐点确认，减仓 10%；</li>
+            <li>非农就业连续 2 月为负 → 阶段 10 升级，美股仓位降至 30%；</li>
+            <li>不要被 4.1% 低失业率迷惑——它是滞后指标，该信号亮起时市场往往已大幅下跌。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前（2026.04）</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>JOLTS 辞职率
+            <span class="info" data-tip="Job Openings and Labor Turnover Survey 中的自愿离职率。工人不敢换工作→领先失业率上升 6-12 个月。BLS 月度发布。">i</span>
+          </td>
+          <td class="col-2000">~2.5%（正常）</td>
+          <td class="col-2008">2.2% → 1.4%</td>
+          <td class="col-now"><a class="src" href="https://www.bls.gov/jlt/" target="_blank" rel="noopener"><strong>1.9%</strong>（持续下降）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>JOLTS 招聘率
+            <span class="info" data-tip="月度新招聘人数占总就业比例。下降=企业需求萎缩+招聘冻结。领先失业率 3-6 个月。">i</span>
+          </td>
+          <td class="col-2000">~4%+（正常）</td>
+          <td class="col-2008">4% → 3%</td>
+          <td class="col-now"><a class="src" href="https://www.bls.gov/jlt/" target="_blank" rel="noopener"><strong>3.1%</strong>（2020-04 以来最低）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>底层 20% 实际工资增速
+            <span class="info" data-tip="名义工资增速 − CPI 通胀率。看底层 20% 分位而非平均数，避免被高收入拉高。亚特兰大联储 Wage Growth Tracker 按分位提供。">i</span>
+          </td>
+          <td class="col-2000">正增长（繁荣期）</td>
+          <td class="col-2008">转负增长</td>
+          <td class="col-now"><a class="src" href="https://www.atlantafed.org/chcs/wage-growth-tracker" target="_blank" rel="noopener"><strong>底层 20% 负增长</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>多职工作者
+            <span class="info" data-tip="同时打两份或以上工的人数。工资不够生活+零工经济双重因素。需结合 involuntary part-time 一起看。">i</span>
+          </td>
+          <td class="col-2000">~700 万</td>
+          <td class="col-2008">~750 万</td>
+          <td class="col-now"><a class="src" href="https://fred.stlouisfed.org/series/LNS12026619" target="_blank" rel="noopener"><strong>~850 万（历史新高）</strong> ↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>非经济性兼职
+            <span class="info" data-tip="involuntary part-time：想全职但找不到、被迫兼职的人。与多职工作者交叉验证——两者同升=压力确认。">i</span>
+          </td>
+          <td class="col-2000">低位</td>
+          <td class="col-2008">飙升至 900 万+</td>
+          <td class="col-now"><a class="src" href="https://fred.stlouisfed.org/series/LNS12032194" target="_blank" rel="noopener"><strong>上升中（~440 万）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lag">滞后</span>失业率 U-3
+            <span class="info" data-tip="U-3 失业率，滞后指标，危机中后期才急升。">i</span>
+          </td>
+          <td class="col-2000">4.0% → 6.3%</td>
+          <td class="col-2008">4.7% → 10.0%</td>
+          <td class="col-now"><a class="src" href="https://www.bls.gov/cps/" target="_blank" rel="noopener"><strong>~4.1%</strong>（尚未急升）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 2：储蓄 ==================== -->
+  <div class="tab-panel" id="t2">
+    <div class="stage-header red">
+      <div class="stage-title">🔴 阶段 2：储蓄耗尽</div>
+      <div class="stage-q">核心问题：没有流入之后，还有多少家底能撑？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          平均储蓄率 4.6% 看似正常，但<strong>这是平均数的陷阱</strong>——旧金山联储分层数据显示底层 50% 家庭的"超额储蓄"（疫情期累积部分）已耗尽甚至为负，顶层 20% 的储蓄掩盖了底层的危机。典型 K 型分化证据。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>拒绝平均数：<strong>储蓄率的分母被高收入严重拉高</strong>，顶层 10% 储蓄率可能 20%+，底层 50% 可能 -2%；</li>
+            <li>看<strong>分层超额储蓄</strong>（旧金山联储）而非总体储蓄率——这是疫情期累积的"额外家底"，底层已耗尽意味着消费只能靠举债（传导到阶段 3）；</li>
+            <li>当前 K 型分化是<strong>历史上最大的</strong>——2000/2008 没有"分层超额储蓄"这个概念，因为当时没有疫情期的异常财政转移；</li>
+            <li>历史对标：2008 年的储蓄率低是全体低（3%），不像当前"平均正常+底层崩塌"的结构。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>对<strong>低收入客群相关股</strong>（DG、DLTR 等）结构性减持——底层现金流已断；</li>
+            <li>对<strong>高收入客群相关股</strong>（LULU、高端酒店等）继续观察——顶层储蓄仍在；</li>
+            <li>关注政府财政政策——若出现新一轮针对低收入的转移支付（EITC 扩大等），可能短期缓解此阶段压力。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>个人储蓄率（全体平均）
+            <span class="info" data-tip="可支配收入中没有被消费掉的部分占比。BEA 每月发布。这是全体平均——被高收入严重拉高。">i</span>
+          </td>
+          <td class="col-2000">~5%（正常）</td>
+          <td class="col-2008">~3%（低位）</td>
+          <td class="col-now"><a class="src" href="https://www.bea.gov/data/income-saving/personal-saving-rate" target="_blank" rel="noopener"><strong>4.6%</strong>（低位略回升）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>底层 50% 超额储蓄
+            <span class="info" data-tip="旧金山联储按收入分位计算的'疫情期累积储蓄减去趋势线'。底层耗尽=被迫举债或消费降级。">i</span>
+          </td>
+          <td class="col-2000">概念不存在</td>
+          <td class="col-2008">概念不存在</td>
+          <td class="col-now"><a class="src" href="https://www.frbsf.org/research-and-insights/data-and-indicators/pandemic-era-excess-savings/" target="_blank" rel="noopener"><strong>已耗尽（≤0）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>顶层 10% 超额储蓄</td>
+          <td class="col-2000">—</td>
+          <td class="col-2008">—</td>
+          <td class="col-now"><a class="src" href="https://www.frbsf.org/research-and-insights/data-and-indicators/pandemic-era-excess-savings/" target="_blank" rel="noopener"><strong>仍为正</strong>（K 型顶）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>K 型分化差距
+            <span class="info" data-tip="顶层 10% 与底层 50% 的超额储蓄差值。差距越大，K 型越明显。">i</span>
+          </td>
+          <td class="col-2000">无显著 K 型</td>
+          <td class="col-2008">分化存在但程度较轻</td>
+          <td class="col-now"><strong>历史性最大分化</strong></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>401(k) 提前支取
+            <span class="info" data-tip="Hardship withdrawal。从养老金账户提前取钱是'最后手段'——会有 10% 罚款。比例上升=短期现金流极度紧张。Fidelity/Vanguard 季度发布。">i</span>
+          </td>
+          <td class="col-2000">低位</td>
+          <td class="col-2008">上升</td>
+          <td class="col-now"><a class="src" href="https://www.fidelity.com/about-fidelity/retirement/workplace-investing/building-financial-futures" target="_blank" rel="noopener"><strong>上升至历史高位</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 3：举债 ==================== -->
+  <div class="tab-panel" id="t3">
+    <div class="stage-header red">
+      <div class="stage-title">🔴 阶段 3：举债求生</div>
+      <div class="stage-q">核心问题：储蓄没了，借了多少？借了什么？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          系统内信用卡余额 $1.28 万亿（历史新高），学生贷逾期流入率 16.19%（历史高位）；同时大量压力<strong>藏在"系统外"</strong>——BNPL、EWA 影子信贷规模无官方统计，2000/2008 根本不存在这类数据。这是框架的独特观察。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>信用卡总余额增长的<strong>二义性</strong>：可能是信心强（主动借），也可能是被迫维持生活（被动借）——要结合逾期率判断；当前逾期流入率 7.13% 高位 → 说明是被迫；</li>
+            <li>学生贷是独特压力——2024-09 恢复还款后大量借款人重新进入逾期统计，<strong>16.19% 逾期流入率是历史极端</strong>，2000/2008 学生贷规模小不成气候；</li>
+            <li>BNPL 食品杂货占比的逻辑：BNPL 最初用于电子产品/服装（非必需），当人用 BNPL 买食品 → 基本生活现金流断裂。这是"用债务填补短期现金流"的极端信号；</li>
+            <li>EWA（付费提前领薪）的快速增长无法完全用产品渗透解释——增速 &gt;50% 必然有压力驱动成分。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>对 BNPL 服务商（AFRM 等）保持警惕——监管和坏账双压力；</li>
+            <li>对次级信用卡专营商（COF/SYF）关注核销率变化——当前虽改善但是"幸存者偏差"所致，见阶段 5-6 逻辑；</li>
+            <li>关注联邦学生贷款政策——若再度暂停还款，会短期缓解但延迟真实信号。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>信用卡总余额
+            <span class="info" data-tip="纽约联储家庭债务季度报告（HHDC）。只含'系统内'借款人——被拒卡的人不在其中。">i</span>
+          </td>
+          <td class="col-2000">~$0.7 万亿</td>
+          <td class="col-2008">~$1.0 万亿</td>
+          <td class="col-now"><a class="src" href="https://www.newyorkfed.org/microeconomics/hhdc" target="_blank" rel="noopener"><strong>$1.28 万亿</strong>（历史新高）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>家庭总债务
+            <span class="info" data-tip="抵押贷款+信用卡+汽车贷+学生贷+HELOC 合计。反映家庭部门总杠杆。">i</span>
+          </td>
+          <td class="col-2000">~$7 万亿</td>
+          <td class="col-2008">$12 万亿（房贷主导）</td>
+          <td class="col-now"><a class="src" href="https://www.newyorkfed.org/microeconomics/hhdc" target="_blank" rel="noopener"><strong>$18.78 万亿</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>学生贷 90+ 天逾期流入率
+            <span class="info" data-tip="2024-09 恢复还款后大量借款人重新进入逾期统计。16%+ 是历史极端水平。">i</span>
+          </td>
+          <td class="col-2000">规模小不显著</td>
+          <td class="col-2008">开始增长</td>
+          <td class="col-now"><a class="src" href="https://www.newyorkfed.org/microeconomics/hhdc" target="_blank" rel="noopener"><strong>16.19%</strong>（历史高位）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>BNPL 食品杂货占比
+            <span class="info" data-tip="先买后付最初用于电子产品/服装。当人们用 BNPL 买食品=现金流撑不住基本生活。Affirm/Klarna/Afterpay 未统一披露品类。">i</span>
+          </td>
+          <td class="col-2000">不存在</td>
+          <td class="col-2008">不存在</td>
+          <td class="col-now"><a class="src" href="https://investors.affirm.com/financials/sec-filings/default.aspx" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>~25%（估算）</strong> ↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>EWA 提前领薪市场
+            <span class="info" data-tip="Earned Wage Access。付费提前拿自己工资=月底没钱过不去。EarnIn、DailyPay、Payactiv 为主。">i</span>
+          </td>
+          <td class="col-2000">不存在</td>
+          <td class="col-2008">不存在</td>
+          <td class="col-now"><a class="src" href="https://www.consumerfinance.gov/data-research/research-reports/data-spotlight-developments-in-the-earned-wage-access-market/" target="_blank" rel="noopener"><strong>$1200 亿+/年（估算）</strong> ↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>循环消费信贷增速 (YoY)
+            <span class="info" data-tip="美联储 G.19 月度数据。增速快速上升=人们在借钱；快速放缓=银行收紧发卡。">i</span>
+          </td>
+          <td class="col-2000">正常</td>
+          <td class="col-2008">增速从 +6% → 负增长</td>
+          <td class="col-now"><a class="src" href="https://www.federalreserve.gov/releases/g19/current/" target="_blank" rel="noopener"><strong>放缓（~+3% YoY）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 4：消费降级 ==================== -->
+  <div class="tab-panel" id="t4">
+    <div class="stage-header red">
+      <div class="stage-title">🔴 阶段 4：消费降级</div>
+      <div class="stage-q">核心问题：借完之后，人们在买什么/不买什么？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          降级阶梯（4a 奢侈→4b 外食→4c 家居→4d 品牌→4e 业态→4f 折扣→4g 食物→4h 援助）当前位于 <strong>4e-4f</strong>（降级业态→极端降级）。WMT CEO <strong>尚未</strong>提及"发薪日效应"——这是 2007 Q2 的标志性信号，若出现 = 升级到 4g-4h。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>边际效用递减：消费者砍支出有严格顺序，<strong>先砍必要性最低的</strong>（奢侈品），最后砍食物——观察哪类公司财报先恶化就能定位当前处于哪一阶；</li>
+            <li>MCD vs CMG 对比法：MCD 客群低收入、CMG 中产——若 MCD 跌 CMG 涨 = K 型早期（只有底层降级）；若两者都跌 = K 型中期（中产也开始省）；当前 MCD US SSS 负增长，CMG 仍正 = <strong>K 型早-中期</strong>；</li>
+            <li>WMT "高收入客户持续流入" 是<strong>降级业态</strong>的确凿证据——高收入放弃 Target/Whole Foods 去 Walmart 说明中产也在降级；</li>
+            <li>"发薪日效应"是升级到 4g 的<strong>唯一触发信号</strong>——当 WMT 管理层电话会中出现"月初大买月底几乎不来"的描述，即刻升级。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li><strong>监控 WMT 下次财报电话会</strong>（5 月中旬）——逐字寻找"paycheck cycle"/"monthly pattern"表述；出现即降美股仓位 10%；</li>
+            <li>减持 4f-4g 对应股票（DG、DLTR）——底层客群持续崩溃；</li>
+            <li>关注必需品 vs 可选品分化——TGT 可选品负增长而必需品稳，是 4d → 4e 过渡；</li>
+            <li>SNAP 参与人数连续 3 月增加 → 直接进入 4h。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4>降级阶梯 · 对应公司财报信号</h4>
+      <table>
+        <tr><th>阶段</th><th>观察公司</th><th>核心信号</th><th>当前状态</th><th>核实</th></tr>
+
+        <tr>
+          <td>4a 奢侈品</td>
+          <td>
+            <a class="src" href="https://www.lvmh.com/investors/" target="_blank" rel="noopener">LVMH</a>
+            /
+            <a class="src" href="https://www.ralphlauren.com/investor-relations" target="_blank" rel="noopener">RL</a>
+          </td>
+          <td>高端客群销量</td>
+          <td>放缓</td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4b 外食</td>
+          <td>
+            <a class="src" href="https://corporate.mcdonalds.com/corpmcd/investors/financial-information.html" target="_blank" rel="noopener">MCD</a>
+            <span class="era3">三届幸存</span>
+            vs
+            <a class="src" href="https://ir.chipotle.com/" target="_blank" rel="noopener">CMG</a>
+            <span class="info" data-tip="MCD 客单价 $8-10 低收入客群；CMG $12-15 中产。MCD 跌+CMG 涨=K 型早期；MCD 跌+CMG 也跌=中产也开始省。">i</span>
+          </td>
+          <td>US SSS 对比</td>
+          <td>MCD US SSS 负增长 / CMG 正</td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4c 家居装修</td>
+          <td>
+            <a class="src" href="https://ir.homedepot.com/financial-reports/sec-filings" target="_blank" rel="noopener">HD</a>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td>DIY 客流 vs Pro 客流</td>
+          <td>DIY 弱 / Pro 稳</td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4d 降级品牌</td>
+          <td>
+            <a class="src" href="https://corporate.target.com/investors/sec-filings" target="_blank" rel="noopener">TGT</a>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td>可选品类 SSS</td>
+          <td>可选品负增长</td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4e 降级业态</td>
+          <td>
+            <a class="src" href="https://stock.walmart.com/financials/sec-filings/default.aspx" target="_blank" rel="noopener">WMT</a>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td>高收入客户流入比例</td>
+          <td>高收入持续流入</td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4f 极端降级</td>
+          <td>
+            <a class="src" href="https://www.dollartree.com/investors" target="_blank" rel="noopener">DLTR</a>
+            <span class="era3">三届幸存</span>
+            /
+            <a class="src" href="https://investor.dollargeneral.com/websites/dollargeneral/English/0/sec-filings.html" target="_blank" rel="noopener">DG</a>
+          </td>
+          <td>同店销售（SSS）</td>
+          <td>底层客群压力持续</td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4g 只买食物
+            <span class="info" data-tip="非食品支出崩塌。WMT CEO 2007 Q2 描述的'月初大买月底不来'=典型 4g 信号。">i</span>
+          </td>
+          <td>
+            <a class="src" href="https://stock.walmart.com/investors/events-and-presentations/default.aspx" target="_blank" rel="noopener">WMT earnings call</a>
+          </td>
+          <td>CEO 是否提及"发薪日效应"</td>
+          <td><strong>尚未出现</strong></td>
+          <td><span class="verify v-ok"><span class="earnings-mark">🏛️</span>✅</span></td>
+        </tr>
+
+        <tr>
+          <td>4h 食品援助
+            <span class="info" data-tip="SNAP（食品券）参与人数，USDA 月度发布。连续多月增加=底层进入生存模式。">i</span>
+          </td>
+          <td>USDA SNAP 数据</td>
+          <td>SNAP 参与人数</td>
+          <td><a class="src" href="https://www.fns.usda.gov/pd/supplemental-nutrition-assistance-program-snap" target="_blank" rel="noopener">高位平稳 ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+
+      <h4>历史对标</h4>
+      <table class="cmp-table">
+        <tr><th>阶段对比</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th></tr>
+        <tr>
+          <td>所处降级阶段</td>
+          <td class="col-2000">无降级（消费强劲）</td>
+          <td class="col-2008">4f-4g（极端降级）</td>
+          <td class="col-now"><strong>4e-4f</strong></td>
+        </tr>
+        <tr>
+          <td>WMT "发薪日效应"</td>
+          <td class="col-2000">未出现</td>
+          <td class="col-2008">2007 Q2 CEO 明确描述</td>
+          <td class="col-now"><strong>尚未出现</strong></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 5：系统内信用 ==================== -->
+  <div class="tab-panel" id="t5">
+    <div class="stage-header orange">
+      <div class="stage-title">🟠 阶段 5：系统内信用压力</div>
+      <div class="stage-q">核心问题：还在系统里的人，还能撑多久？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          <strong>反直觉——系统内信用质量正在"改善"</strong>（COF 核销率从 6.19% 降至 4.63%，SYF 从 6.9% 降至 5.37%，信用卡逾期流入微降）。但这<strong>不是经济变好</strong>，而是阶段 6 的主动排斥让次级借款人被踢出分母——幸存者偏差的典型表现。真正压力去了阶段 7。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>逾期率 = 逾期余额 ÷ 总余额。银行收紧后分母中次级占比下降 → <strong>分母分子同时缩小但比例显得"改善"</strong>——这是幸存者偏差的数学来源；</li>
+            <li>看绝对额而非比率：COF 的净核销金额的绝对值<strong>没有</strong>按比率那样下降；</li>
+            <li>净核销率（NCO）比逾期率更可靠：逾期可以被"重组"（restructured）延迟，核销是银行"认赔"会计准则不允许粉饰；</li>
+            <li>K 型对照组：AXP（高端客户）核销率维持 2.3% 低位 ← 说明问题只在次级层；COF/SYF 改善是排斥所致 ← 真实压力在系统外；</li>
+            <li>交叉验证阶段 7：汽车贷逾期维持 2.95% 稳定 + 汽车收回量 270 万破纪录 → 说明压力不是消失而是从"逾期"直接跳到"收回"。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>不要被 COF/SYF 的"改善"迷惑——<strong>必须结合阶段 6（准入率）和阶段 7（汽车收回）交叉验证</strong>；</li>
+            <li>对 COF/SYF 股价保持警惕——表面"改善"支撑了估值，但次贷客户消失 = 未来增长空间也消失；</li>
+            <li>AXP 是 K 型分化的对照组——若 AXP 核销率开始上升，即刻视为"压力传到高端客户"阶段性警报；</li>
+            <li>关注 T5 触发器：JPM/BAC 核销率季环比加速 → 阶段 9 升级🔴。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>信用卡逾期流入 90+ 天
+            <span class="info" data-tip="过去一季度内新滑入 90+天逾期的余额占比。流入率比存量逾期率更敏感。">i</span>
+          </td>
+          <td class="col-2000">~4%（正常）</td>
+          <td class="col-2008">峰值 ~10%+</td>
+          <td class="col-now"><a class="src" href="https://www.newyorkfed.org/microeconomics/hhdc" target="_blank" rel="noopener"><strong>7.13%</strong>（高但微降中）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>Capital One Domestic Card NCO
+            <span class="info" data-tip="COF 1994 IPO，次级信用卡为主。经历 2000/2008/2026 三届周期。Domestic Card 净核销率是最干净的次级压力信号。">i</span>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td class="col-2000">~6%</td>
+          <td class="col-2008">峰值 ~10%</td>
+          <td class="col-now"><a class="src" href="https://investor.capitalone.com/financial-information/financial-results/default.aspx" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>4.63%</strong>（Q3'25，从 6.19% 改善）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>Synchrony NCO
+            <span class="info" data-tip="SYF 2014 年从 GE Capital 分拆 IPO——不跨三届。但业务线 GE Capital 在 2000/2008 存在，核销率峰值接近 10%。">i</span>
+          </td>
+          <td class="col-2000">GE Capital 约 5%</td>
+          <td class="col-2008">GE Capital 飙至 10%+</td>
+          <td class="col-now"><a class="src" href="https://investors.synchrony.com/" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>5.37%</strong>（Q4'25，从 6.9% 改善）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>American Express 核销率
+            <span class="info" data-tip="AXP 1977 上市。高端客户群为主，是'K 型分化'对照组——AXP 若维持低位而 COF 高，说明只有底层在恶化。">i</span>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td class="col-2000">~5%</td>
+          <td class="col-2008">~8%</td>
+          <td class="col-now"><a class="src" href="https://ir.americanexpress.com/financials/quarterly-earnings" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>~2.3%</strong>（低位）↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>汽车贷逾期流入 90+ 天
+            <span class="info" data-tip="汽车贷比信用卡更可靠——合同签了就在系统里，银行不能单方面取消。贷款期延长到 72-84 个月可能延迟违约暴露。">i</span>
+          </td>
+          <td class="col-2000">~2%</td>
+          <td class="col-2008">峰值 ~4%</td>
+          <td class="col-now"><a class="src" href="https://www.newyorkfed.org/microeconomics/hhdc" target="_blank" rel="noopener"><strong>2.95%</strong>（稳定）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>次级汽车贷 ABS 拖欠率
+            <span class="info" data-tip="次级汽车贷款打包成 ABS 证券，月度披露拖欠情况。次级专营商（Santander Consumer 等）最先暴露。">i</span>
+          </td>
+          <td class="col-2000">~5%</td>
+          <td class="col-2008">峰值 ~10%</td>
+          <td class="col-now"><a class="src" href="https://www.fitchratings.com/research" target="_blank" rel="noopener"><strong>6-7%（高位）</strong> ↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 6：踢出系统 ==================== -->
+  <div class="tab-panel" id="t6">
+    <div class="stage-header red">
+      <div class="stage-title">🔴 阶段 6：被踢出系统</div>
+      <div class="stage-q">核心问题：银行对次级借款人是否还开放？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          次级发卡率 16.43%（正常 25%+）——意味着<strong>约 35% 的次级借款人被排除在系统外</strong>。这些人流向 BNPL、EWA、当铺、家人借款——这些数据不进入美联储/纽约联储的主流统计，是真正的"暗债"。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>次级发卡率（FICO&lt;660 占新发卡比例）是<strong>直接测量幸存者偏差大小</strong>的唯一指标——不是间接推导而是定量；</li>
+            <li>三个阈值档次：&gt;25% 开放 / 20% 收紧 / 18% 警戒 / 15% 系统性排斥 / &lt;12% 接近全关；当前 16.43% = <strong>系统性排斥</strong>；</li>
+            <li>SLOOS（美联储贷款官调查）25-30% 净收紧 = 显著收紧但未达 2008 极端水平（&gt;40%）；</li>
+            <li>"35% 被排除"的数学：(25.2% − 16.4%) / 25.2% ≈ 35%——这个数字直接对应未来会出现在阶段 7-8 的受压人群；</li>
+            <li>2008 教训：当时先宽后紧（泡沫期宽松到违约潮后暴降），当前是<strong>持续收紧</strong>状态——银行已经提前防御，这对金融系统是保护但对下层消费者是打压。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>次级发卡率回升 &gt; 20% → <strong>R1 缓和触发器</strong>——可考虑加仓；</li>
+            <li>继续跌破 14% → 银行体系防御进一步收紧，对 BNPL 估值反而是利好（分流需求）但坏账激增；</li>
+            <li>监控 SLOOS 下次季度发布——净收紧 &gt;40% = 2008 级别极端，直接降低美股仓位。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>次级发卡率 (FICO &lt; 660)
+            <span class="info" data-tip="新发信用卡中 FICO 分数低于 660（次级）的占比。直接测量'幸存者偏差的大小'——这个数字下降=次级借款人被踢出系统，不是他们的信用改善了。">i</span>
+          </td>
+          <td class="col-2000">&gt;25%（宽松）</td>
+          <td class="col-2008">先宽后紧（暴降）</td>
+          <td class="col-now"><a class="src" href="https://www.philadelphiafed.org/consumer-finance/credit-cards" target="_blank" rel="noopener"><strong>16.43%</strong>（大幅收紧）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>SLOOS 净收紧百分比
+            <span class="info" data-tip="Senior Loan Officer Opinion Survey。美联储季度调查，>0=净收紧贷款标准。">i</span>
+          </td>
+          <td class="col-2000">~10%（轻微）</td>
+          <td class="col-2008">&gt;40%（极端）</td>
+          <td class="col-now"><a class="src" href="https://www.federalreserve.gov/data/sloos.htm" target="_blank" rel="noopener"><strong>25-30%</strong>（显著）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>被排除的次级借款人比例
+            <span class="info" data-tip="(正常发卡率 25.2% − 当前 16.4%) / 25.2% = 35%。">i</span>
+          </td>
+          <td class="col-2000">接近 0</td>
+          <td class="col-2008">一度达 40%+</td>
+          <td class="col-now"><strong>~35%</strong></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>信用额度削减（credit line cuts）
+            <span class="info" data-tip="银行对现有卡主主动降低信用额度。2008 年危机中曾大规模出现。现在小规模但持续。">i</span>
+          </td>
+          <td class="col-2000">正常</td>
+          <td class="col-2008">大规模</td>
+          <td class="col-now"><a class="src" href="https://www.federalreserve.gov/data/sloos.htm" target="_blank" rel="noopener"><strong>小规模持续</strong> ↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 7：硬资产损失 ==================== -->
+  <div class="tab-panel" id="t7">
+    <div class="stage-header red">
+      <div class="stage-title">🔴 阶段 7：硬资产损失</div>
+      <div class="stage-q">核心问题：被踢出的人在哪里？从车开始收——物理事件最诚实。</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          汽车收回量 <strong>~270 万辆（2025）</strong>——<strong>超过 2008 年峰值</strong>（~200 万）。这是最"诚实"的指标（物理事件、无法粉饰）。与阶段 5 信用卡数据的"改善"形成<strong>尖锐背离</strong>：系统内数字好看了，系统外的车在被拖走。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>为什么汽车收回量是"最诚实"的：物理事件（拖车公司把车拖走）无法统计美化；用<strong>绝对数量而非比率</strong>，没有分母扭曲；代表借款人现金流彻底断裂——无法"重组"也无法"重新分类"；</li>
+            <li>与阶段 5（汽车贷逾期率 2.95% 稳定）的<strong>关键背离</strong>：传统逻辑是"逾期↑ → 收回↑"，当前是"逾期稳 → 收回破纪录"——说明违约直接跳过逾期阶段进入收回，可能是长贷款期（72-84 月）让违约被压缩；</li>
+            <li>房屋止赎 35 万/年（低位）——与 2008 的 280 万形成鲜明对比，<strong>当前不是房贷危机</strong>（银行已学聪明）而是汽车/次级贷危机；</li>
+            <li>汽车负资产 25%（欠款 &gt; 车价）历史高位——即使不逾期也是风险，二手车价再跌 10% 就是新一波抛售潮；</li>
+            <li>RDN 行业协会的 270 万数字<strong>覆盖所有处置渠道</strong>，比 Cox Automotive 只统计拍卖渠道的数字更完整。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>避开二手车相关股（KMX、CVNA）——270 万辆抛售打压二手车价，负资产比例再推高 → 恶性循环；</li>
+            <li>汽车金融板块（ALLY 等）保持高度警惕——坏账率会滞后反映；</li>
+            <li>关注 ATTOM 月度止赎数据——若房屋止赎开始抬头，问题范围扩大，升级整体衰退判断。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>汽车收回量（年度）
+            <span class="info" data-tip="借款人停止还款后，贷方派拖车把车拖走。只反映完全断供的极端情况。Cox Automotive 只统计拍卖渠道；RDN 行业协会估算覆盖所有处置。">i</span>
+          </td>
+          <td class="col-2000">~150 万/年</td>
+          <td class="col-2008">峰值 ~200 万+</td>
+          <td class="col-now"><a class="src" href="https://www.cureposession.com/statistics" target="_blank" rel="noopener"><strong>~270 万</strong>（超过 2008！）↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>房屋止赎量
+            <span class="info" data-tip="ATTOM 月度数据。2008 年是房贷危机的核心。当前房贷端比 2008 健康得多。">i</span>
+          </td>
+          <td class="col-2000">低位</td>
+          <td class="col-2008">峰值 ~280 万户/年</td>
+          <td class="col-now"><a class="src" href="https://www.attomdata.com/solutions/market-trends-reports/foreclosure-market-report/" target="_blank" rel="noopener">~35 万/年（低位）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>汽车负资产比例
+            <span class="info" data-tip="欠款 > 车价的车主比例。长贷款期（72-84 个月）+ 二手车价下跌双重推高。">i</span>
+          </td>
+          <td class="col-2000">~10%</td>
+          <td class="col-2008">~15%</td>
+          <td class="col-now"><a class="src" href="https://www.edmunds.com/industry/press/" target="_blank" rel="noopener"><strong>~25%（历史高位）</strong> ↗</a></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>二手车批发价指数
+            <span class="info" data-tip="Manheim Used Vehicle Value Index。收回量激增+库存堆积 → 二手车价下跌 → 推高负资产比例。">i</span>
+          </td>
+          <td class="col-2000">稳定</td>
+          <td class="col-2008">2008 年大跌</td>
+          <td class="col-now"><a class="src" href="https://publish.manheim.com/en/services/consulting/used-vehicle-value-index.html" target="_blank" rel="noopener"><strong>震荡下行</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lag">滞后</span>租客驱逐申请
+            <span class="info" data-tip="Eviction Lab 数据——租客拖欠后房东申请驱逐。低收入家庭最先受冲击。">i</span>
+          </td>
+          <td class="col-2000">—</td>
+          <td class="col-2008">上升</td>
+          <td class="col-now"><a class="src" href="https://evictionlab.org/" target="_blank" rel="noopener"><strong>高于疫情前 30%+</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 8：正式退出 ==================== -->
+  <div class="tab-panel" id="t8">
+    <div class="stage-header orange">
+      <div class="stage-title">🟠 阶段 8：正式退出（破产）</div>
+      <div class="stage-q">核心问题：从"挣扎求生"到"彻底放弃"有多少人？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          年化 <strong>57.4 万件</strong>，同比 +11%，12 月环比 +21%——<strong>在加速</strong>。Ch.7（清算型）占比 62% 持续上升（从"挣扎"走向"彻底放弃"）。绝对数远低于 2008 峰值 150 万，但<strong>趋势加速是警报</strong>，而非当前绝对值水平。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>看趋势（加速）而非绝对数（还未到 2008）——破产是滞后指标但加速度是领先指标；</li>
+            <li>Ch.7 vs Ch.13 的意义：Ch.13（重组）= 人们还"挣扎求生"，有收入但不够还债；Ch.7（清算）= 人们"彻底放弃"，已无力偿还；<strong>Ch.7 占比上升 = 情况从"挣扎"恶化到"绝望"</strong>；</li>
+            <li>2000 年破产数 130 万（比当前高），但那是<strong>高基数期</strong>（2005 年破产法改革前，滥用倾向强），<strong>不能简单按数字对比</strong>；</li>
+            <li>月环比加速（Dec +21%）= 2008 Q4 级别的月度节奏——若连续 3 月保持 &gt;15% 月环比，破产年化将迅速突破 70 万；</li>
+            <li>T6 触发器：破产年化 &gt; 60 万且加速 = 阶段 8 升级🔴——当前 57.4 万<strong>极接近</strong>。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>月度跟踪 uscourts.gov 数据（每月中旬发布）——若 2026-04 数据 &gt; 5 万件/月 = 年化破 60 万，直接触发减仓；</li>
+            <li>避开消费信贷 ABS 相关 ETF——破产加速直接侵蚀 ABS 回收率；</li>
+            <li>Ch.7 占比若突破 65% = 真正的绝望信号，即刻降低美股仓位至 40% 以下。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>破产申请量/年
+            <span class="info" data-tip="美国联邦破产法庭统计。Ch.7 清算型=彻底放弃；Ch.13 重组型=挣扎求生。">i</span>
+          </td>
+          <td class="col-2000">~130 万（高基数）</td>
+          <td class="col-2008">峰值 ~150 万</td>
+          <td class="col-now"><a class="src" href="https://www.uscourts.gov/statistics-reports/bankruptcy-filings-statistics" target="_blank" rel="noopener"><strong>57.4 万</strong>（+11% YoY，加速）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>Ch.7 占比
+            <span class="info" data-tip="Ch.7 清算型破产占比上升=人们从'挣扎求生'走向'彻底放弃'。">i</span>
+          </td>
+          <td class="col-2000">~70%</td>
+          <td class="col-2008">~72%</td>
+          <td class="col-now"><a class="src" href="https://www.uscourts.gov/statistics-reports/bankruptcy-filings-statistics" target="_blank" rel="noopener"><strong>~62%（上升中）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>月环比增速</td>
+          <td class="col-2000">持平</td>
+          <td class="col-2008">月度 +15-20%</td>
+          <td class="col-now"><strong>Dec +21% MoM</strong></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>企业破产申请（Ch.11）
+            <span class="info" data-tip="Chapter 11 企业重组破产。2024-2025 激增，大量小企业和零售商倒闭。">i</span>
+          </td>
+          <td class="col-2000">上升</td>
+          <td class="col-2008">大规模</td>
+          <td class="col-now"><a class="src" href="https://www.uscourts.gov/statistics-reports/bankruptcy-filings-statistics" target="_blank" rel="noopener"><strong>创 2010 以来新高</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 9：银行暴露 ==================== -->
+  <div class="tab-panel" id="t9">
+    <div class="stage-header orange">
+      <div class="stage-title">🟠 阶段 9：银行端暴露</div>
+      <div class="stage-q">核心问题：次级的压力已经传到银行资产负债表了吗？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          小银行核销率是大银行 <strong>2.36 倍</strong>（历史正常 1.5-2.0x），<strong>分化严重</strong>。JPM/BAC 准备金率（ACL/Loans）持续上升但绝对水平（~1.7%）远低于 2008 峰值（~3%）。<strong>银行系统整体比 2008 健康得多</strong>（杠杆 10-15x vs 2008 的 30-40x）。一旦 JPM/BAC 核销率加速 = T5 触发器 = 阶段 9 升级🔴。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>K 型分化的银行版本：大银行（JPM/BAC）服务优质客户 vs 小银行/社区银行服务次级——<strong>差距扩大 = K 型加剧</strong>。2.36x 是严重分化但 2008 是 2.0x → 两次分化性质不同（2008 是全面崩，当前是底层崩）；</li>
+            <li>银行的"内部预测"看 ACL/Loans（准备金率）——CECL 会计准则要求前瞻性计提，银行比外部分析师更了解自己的贷款质量，<strong>连续 3 季度上升 = 趋势性恶化确认</strong>；</li>
+            <li>杠杆倍数 10-15x 是最大的结构性保护——Dodd-Frank 后的监管让银行资本充足率大幅提升，这是当前与 2008 最重要的区别；</li>
+            <li>商业地产（CRE）是独特风险——不是 2008 的重复而是新风险。WFC/PNC 等区域银行 CRE 敞口大，<strong>办公楼空置率高推高违约</strong>；</li>
+            <li>JPM Card Services NCO 3.4% 上升中但远低于 2008 峰值 10%——说明压力已经开始传但还未失控。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li><strong>减持区域银行 ETF</strong>（KRE、IAT）——阶段 9 直接承压；</li>
+            <li>减持商业地产 REIT（SLG、BXP 等）——CRE 违约上升直接冲击；</li>
+            <li>大银行（JPM、BAC）仍可持有但警惕——T5 触发即 JPM/BAC 核销率季环比加速 = 减仓信号；</li>
+            <li>关注 FDIC 季度报告——小银行倒闭数若开始增加 = 新一轮区域银行危机（回顾 2023-03 SVB 的教训）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>JPM Card Services NCO
+            <span class="info" data-tip="JPM 在 2000/2008/2026 都是最大美国银行。信用卡+消费贷核销率是'优质客户'样本。若 JPM 核销率上升=压力已从次级传到主流。">i</span>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td class="col-2000">~5%</td>
+          <td class="col-2008">~10%</td>
+          <td class="col-now"><a class="src" href="https://www.jpmorganchase.com/ir/quarterly-earnings" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>~3.4%</strong>（上升中）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>贷款损失准备金率 (ACL/Loans)
+            <span class="info" data-tip="CECL 会计准则要求前瞻计提——是银行对未来损失的'内部预测'。连续 3 季度上升=趋势性恶化确认。">i</span>
+          </td>
+          <td class="col-2000">~1.5%</td>
+          <td class="col-2008">峰值 ~3%</td>
+          <td class="col-now"><a class="src" href="https://www.jpmorganchase.com/ir/quarterly-earnings" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>~1.7%（上升中）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>小银行 vs 大银行核销率倍数
+            <span class="info" data-tip="大银行（JPM/BAC）优质客户为主；小银行/社区银行服务次级和本地。差距扩大=K 型分化加剧。">i</span>
+          </td>
+          <td class="col-2000">~1.5x</td>
+          <td class="col-2008">~2.0x</td>
+          <td class="col-now"><a class="src" href="https://www.fdic.gov/analysis/quarterly-banking-profile/" target="_blank" rel="noopener"><strong>2.36x</strong>（严重分化）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lag">滞后</span>银行杠杆倍数
+            <span class="info" data-tip="资产 ÷ 权益。2008 年爆表 30-40x 是雷曼倒闭的核心原因。Dodd-Frank 后已强制压降。">i</span>
+          </td>
+          <td class="col-2000">15-20x</td>
+          <td class="col-2008">30-40x</td>
+          <td class="col-now"><strong>10-15x</strong>（健康得多）</td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>商业地产（CRE）贷款质量
+            <span class="info" data-tip="WFC/PNC 等区域银行 CRE 敞口大，是当前独特风险（非 2008 重复）。办公楼空置率高推高违约。">i</span>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td class="col-2000">—</td>
+          <td class="col-2008">非主要风险点</td>
+          <td class="col-now"><a class="src" href="https://www.wellsfargo.com/about/investor-relations/quarterly-earnings/" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>WFC CRE 压力上升</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lag">滞后</span>FDIC 银行倒闭数
+            <span class="info" data-tip="FDIC 托管倒闭银行数。2023 年 SVB/First Republic 后略有平静但社区银行压力持续。">i</span>
+          </td>
+          <td class="col-2000">少</td>
+          <td class="col-2008">百余家</td>
+          <td class="col-now"><a class="src" href="https://www.fdic.gov/resources/resolutions/bank-failures/failed-bank-list/" target="_blank" rel="noopener">低位但需警惕 ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 10：实体经济 ==================== -->
+  <div class="tab-panel" id="t10">
+    <div class="stage-header orange">
+      <div class="stage-title">🟠 阶段 10：实体经济反馈</div>
+      <div class="stage-q">核心问题：宏观指标是否确认衰退开始？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          LEI 连续下降但降速减半（-1.3%/6M vs 之前 -2.6%），<strong>不像 2008 年确定性下行</strong>。收益率曲线 2024 年底解除倒挂——处于"倒挂解除后 12 个月窗口"（2008 衰退就在该窗口内发生）。FedEx/UNP 管理层多次下调指引是 2007 年式信号。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>LEI 10 个子指标综合加权——连续 6 个月下降 = 强烈衰退信号。当前降速<strong>减半</strong>（-1.3 vs -2.6%）说明恶化速度放慢但未转正 → "浅衰退"或"衰退被推迟"的信号；</li>
+            <li>10Y-2Y 收益率倒挂 → 解除这个循环是<strong>最准确的衰退领先指标</strong>（过去 50 年 100% 命中）。2024 年底解除 → 2025 年中-2026 年底是历史高危窗口；</li>
+            <li>FedEx 指引下调是 2007 Q4 → 2008 衰退的<strong>教科书式早期信号</strong>——FDX 看得到全美实体经济的货运数据，管理层电话会描述往往早于官方数据 2-3 个季度；</li>
+            <li>UNP 货运细分（煤炭/汽车/消费品/化工）是经济细分状态的真实镜像——当前消费品运量弱 = 消费降级从数据端验证；</li>
+            <li>非农就业还是正增长（与阶段 1 一致）但放缓——<strong>触发器 T3：非农连续 2 月为负 = 阶段 10 全红</strong>，当前尚未触发。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li>月度跟踪 NFP——连续 2 月负数就是退出信号；</li>
+            <li>每季度跟踪 FDX 财报电话会——管理层语气是高频前瞻指标；</li>
+            <li>LEI 若降速重新加速（&lt;-2%）= 衰退确认，降低美股仓位至 30%；</li>
+            <li>不要赌"软着陆"叙事——历史上 10Y-2Y 解除倒挂后 12 月内衰退概率 &gt; 80%。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>LEI 领先经济指标 (6M)
+            <span class="info" data-tip="Conference Board Leading Economic Index。10 子指标加权。连续 6 个月下降=强烈衰退信号。">i</span>
+          </td>
+          <td class="col-2000">仍在上升</td>
+          <td class="col-2008">持续下降 &gt;6%</td>
+          <td class="col-now"><a class="src" href="https://www.conference-board.org/topics/us-leading-indicators" target="_blank" rel="noopener"><strong>-1.3%/6M</strong>（降速减半）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>10Y-2Y 收益率曲线
+            <span class="info" data-tip="10 年期国债 − 2 年期。倒挂（<0）是衰退领先信号。倒挂解除后 12 个月是衰退高危期。">i</span>
+          </td>
+          <td class="col-2000">2000 初倒挂</td>
+          <td class="col-2008">2006 倒挂 / 2007 解除</td>
+          <td class="col-now"><a class="src" href="https://fred.stlouisfed.org/series/T10Y2Y" target="_blank" rel="noopener"><strong>2024 底解除</strong>（12M 窗口中）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>FedEx 管理层指引
+            <span class="info" data-tip="FDX 1978 上市。管理层指引是经济活动的高频前瞻——2007 Q4 FDX 下调指引被视为 2008 衰退的关键早期信号。">i</span>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td class="col-2000">稳定</td>
+          <td class="col-2008">2007 Q4 下调</td>
+          <td class="col-now"><a class="src" href="https://investors.fedex.com/quarterly-results/default.aspx" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>多次下调</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>Union Pacific 货运细分
+            <span class="info" data-tip="UNP 1969 上市。铁路货运量细分（煤炭/汽车/消费品/化工）是经济细分状态的真实镜像。">i</span>
+            <span class="era3">三届幸存</span>
+          </td>
+          <td class="col-2000">总量稳</td>
+          <td class="col-2008">大幅下滑</td>
+          <td class="col-now"><a class="src" href="https://www.up.com/investor/aar-stb-reports/index.htm" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>消费品运量弱</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lag">滞后</span>非农就业（NFP）月度</td>
+          <td class="col-2000">正增长</td>
+          <td class="col-2008">2008 Q1 转负</td>
+          <td class="col-now"><a class="src" href="https://www.bls.gov/news.release/empsit.toc.htm" target="_blank" rel="noopener"><strong>正增长但放缓</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>ISM 制造业 PMI
+            <span class="info" data-tip="50 是荣枯线。<45 是强衰退信号。">i</span>
+          </td>
+          <td class="col-2000">&lt;45</td>
+          <td class="col-2008">&lt;40</td>
+          <td class="col-now"><a class="src" href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/" target="_blank" rel="noopener"><strong>~48（收缩区）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 阶段 11：市场重定价 ==================== -->
+  <div class="tab-panel" id="t11">
+    <div class="stage-header orange">
+      <div class="stage-title">🟠 阶段 11：市场重定价</div>
+      <div class="stage-q">核心问题：市场有没有在价格中反映前 10 个阶段的恶化？</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="verdict-block">
+        <div class="verdict-card concl">
+          <strong class="lbl">📌 当前结论</strong>
+          CAPE <strong>36-40x 接近 1999 泡沫水平</strong>（44x），Mag 7 占标普 31%——集中度与 2000 年科技板块相当。年内因伊朗冲突 VIX 曾飙至 60——<strong>阶段 11 已短暂触发过</strong>，目前 17.94 但 HY 利差仍在 350-400bp 低位。基本面 vs 市场的背离是框架最警惕的信号。
+        </div>
+        <div class="verdict-card logic">
+          <strong class="lbl">🧠 判断思路</strong>
+          <ul>
+            <li>CAPE 是最重要的估值指标（股价 ÷ 过去 10 年通胀调整后平均 EPS）——<strong>2000 年 44x 是历史峰值，当前 36-40x 已进入"泡沫领域"</strong>但未达极端；</li>
+            <li>Mag 7 的 Capex（$3200 亿+，+45% YoY）主要投向 AI 数据中心和 GPU——<strong>类似 1999-2001 电信公司投光纤</strong>。如果 AI 收入跟不上，Capex 兑现会出问题；</li>
+            <li>VIX 17.94 + HY 利差 &lt; 400bp = 市场尚未定价前 10 个阶段的恶化——这是<strong>基本面 vs 市场的极端背离</strong>，历史上最多持续 6-18 个月；</li>
+            <li>VIX 曾到 60（伊朗冲突）= 阶段 11 <strong>已经短暂触发过</strong>——意味着市场脆弱性已暴露，第二次冲击可能更猛；</li>
+            <li>2000 vs 2008 vs 当前的估值对比：2000 CAPE 44x（只有估值问题），2008 CAPE 27x（信用问题主导），<strong>当前同时具备两者</strong>——这是历史独特性，见第三部分。</li>
+          </ul>
+        </div>
+        <div class="verdict-card action">
+          <strong class="lbl">⚡ 行动建议</strong>
+          <ul>
+            <li><strong>VIX &gt; 25 持续 3 天</strong>（T1 触发器）→ 仓位降 10%；</li>
+            <li>HY 利差 &gt; 500bp → 市场重定价开始，仓位降至 20-30%；</li>
+            <li>VIX &gt; 40 → 全面防御，仓位降至 10% 以下；</li>
+            <li>CAPE &gt; 42 → 泡沫极端预警（当前 40.44 极接近）；</li>
+            <li>Mag 7 中 3 家+下调指引 → 科技盈利拐点，加速减仓；</li>
+            <li><strong>不要赌市场继续升</strong>——背离越久修复越猛烈。但也不要一次性清仓，<strong>分批减至 30-40% 是稳健路径</strong>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <tr><th>指标</th><th>2000 泡沫</th><th>2008 危机</th><th>当前</th><th>核实</th></tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>CAPE（席勒市盈率）
+            <span class="info" data-tip="Cyclically Adjusted Price-to-Earnings。股价 ÷ 过去 10 年通胀调整后平均 EPS。Robert Shiller 创立。">i</span>
+          </td>
+          <td class="col-2000"><strong>44.2x（历史峰值）</strong></td>
+          <td class="col-2008">27x</td>
+          <td class="col-now"><a class="src" href="https://www.multpl.com/shiller-pe" target="_blank" rel="noopener"><strong>36.5-40.4x</strong>（接近 2000）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>VIX 恐慌指数
+            <span class="info" data-tip="Cboe 实时计算。<20 平静 / 20-30 紧张 / 30-40 恐慌 / >40 极度恐慌。2020-03 到 82，2008-10 到 80。">i</span>
+          </td>
+          <td class="col-2000">20 → 40+</td>
+          <td class="col-2008">12 → 80+</td>
+          <td class="col-now"><a class="src" href="https://www.cboe.com/tradable_products/vix/" target="_blank" rel="noopener"><strong>13 → 60 → 17.94</strong>（已冲击一次）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>高收益信用利差（HY Spread）
+            <span class="info" data-tip="垃圾债 − 国债收益率。300-400bp 正常 / 500bp 定价衰退 / 800bp 严重衰退 / 1000bp+ 金融危机。">i</span>
+          </td>
+          <td class="col-2000">350-600bp</td>
+          <td class="col-2008">峰值 2000bp+</td>
+          <td class="col-now"><a class="src" href="https://fred.stlouisfed.org/series/BAMLH0A0HYM2" target="_blank" rel="noopener"><strong>350-400bp</strong>（低位，未定价）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>Mag 7 占 S&amp;P 500 权重
+            <span class="info" data-tip="NVDA/AAPL/MSFT/GOOGL/AMZN/META/TSLA 合计市值占标普比重。集中度越高，指数涨跌越依赖这几只。">i</span>
+          </td>
+          <td class="col-2000">科技板块 ~33%</td>
+          <td class="col-2008">~15%</td>
+          <td class="col-now"><a class="src" href="https://www.slickcharts.com/sp500" target="_blank" rel="noopener"><strong>31%</strong>（接近 2000 集中度）↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>Mag 7 2026 Capex 计划
+            <span class="info" data-tip="MSFT/GOOGL/META/AMZN 财报指引合计。主要投向 AI 数据中心和 GPU。类似 1999-2001 电信公司投光纤。">i</span>
+            <span class="era3">MSFT/AMZN 三届幸存</span>
+          </td>
+          <td class="col-2000">电信 Capex 类似规模</td>
+          <td class="col-2008">—</td>
+          <td class="col-now"><a class="src" href="https://www.sec.gov/edgar/searchedgar/companysearch.html" target="_blank" rel="noopener"><span class="earnings-mark">🏛️</span><strong>$3200 亿+（+45% YoY）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-sync">同步</span>IPO 狂热度
+            <span class="info" data-tip="1999 年无盈利公司 IPO 首日 +300% 是常态。当前 AI 相关 IPO 活跃但远非 1999 级别。">i</span>
+          </td>
+          <td class="col-2000">极度狂热</td>
+          <td class="col-2008">冷清</td>
+          <td class="col-now"><strong>AI 热但非全民</strong></td>
+          <td><span class="verify v-warn">⚠️</span></td>
+        </tr>
+
+        <tr>
+          <td><span class="lead-tag lead-lead">领先</span>Put/Call 比率
+            <span class="info" data-tip="Cboe 期权 Put/Call 比率。>1=恐慌，<0.7=自满。持续低位=市场过度乐观。">i</span>
+          </td>
+          <td class="col-2000">2000 初冲高</td>
+          <td class="col-2008">2007-08 持续高</td>
+          <td class="col-now"><a class="src" href="https://www.cboe.com/us/options/market_statistics/" target="_blank" rel="noopener"><strong>低位（自满）</strong> ↗</a></td>
+          <td><span class="verify v-ok">✅</span></td>
+        </tr>
+      </table>
+
+      <div class="important">
+        <strong>最危险的信号：基本面 vs 市场的极端背离。</strong>
+        前 10 个阶段已显示系统性恶化，但 VIX 17.94、HY 利差 &lt; 400bp、标普仍在高位。历史上这种背离最多持续 6-18 个月——一旦修复（即市场重定价），会是剧烈的。
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content-area -->
+</div><!-- /split -->
+
+<!-- ========== 三、历史独特性 ========== -->
+<h2 id="uniqueness">三、当前周期的历史独特性</h2>
+
+<div class="card">
+<h3>为什么当前不同于 2000 和 2008：两种风险的叠加</h3>
+<table>
+  <tr><th>维度</th><th>2000 年</th><th>2008 年</th><th>2026 年当前</th></tr>
+  <tr>
+    <td>估值泡沫</td>
+    <td class="col-2000">🔴 极端（CAPE 44x）</td>
+    <td class="col-2008">🟢 正常（CAPE 27x）</td>
+    <td class="col-now">🟠 高（CAPE 36-40x 接近 2000）</td>
+  </tr>
+  <tr>
+    <td>信用层健康</td>
+    <td class="col-2000">🟢 健康</td>
+    <td class="col-2008">🔴 崩溃（次贷）</td>
+    <td class="col-now">🟠 次级层恶化中（银行主动收紧）</td>
+  </tr>
+  <tr>
+    <td>硬资产损失</td>
+    <td class="col-2000">🟢 低位</td>
+    <td class="col-2008">🔴 止赎潮</td>
+    <td class="col-now">🔴 汽车收回破纪录（~270 万）</td>
+  </tr>
+  <tr>
+    <td>影子信贷</td>
+    <td class="col-2000">不存在</td>
+    <td class="col-2008">MBS/CDO 为主</td>
+    <td class="col-now">BNPL/EWA（透明度低）</td>
+  </tr>
+  <tr>
+    <td>银行杠杆</td>
+    <td class="col-2000">15-20x</td>
+    <td class="col-2008">30-40x（核心风险）</td>
+    <td class="col-now">10-15x（Dodd-Frank 后健康）</td>
+  </tr>
+  <tr>
+    <td>消费降级阶段</td>
+    <td class="col-2000">无（4a 以上）</td>
+    <td class="col-2008">4f-4g（极端）</td>
+    <td class="col-now">4e-4f（已降级）</td>
+  </tr>
+</table>
+
+<div class="important" style="margin-top:16px;">
+  <strong>历史独特性：当前同时具备 2000 年的估值泡沫特征 AND 2008 年的信用恶化特征。</strong>
+  <p style="margin-top:8px;">这在历史上没有出现过。2000 年只有估值问题没有信用问题；2008 年有信用问题但估值不高。当前两者叠加——无论从哪端暴雷，另一端都会放大冲击。<strong>银行系统更健康（杠杆低）是主要缓冲</strong>。</p>
+</div>
+</div>
+
+<!-- ========== 四、投资决策 ========== -->
+<h2 id="decision">四、投资决策</h2>
+
+<div class="grid2">
+<div class="card">
+<h3>资产配置建议</h3>
+<table>
+  <tr><th>资产类别</th><th>占比</th><th>理由</th></tr>
+  <tr><td>美股</td><td><strong>50-60%</strong></td><td>信用端有改善但估值极高+地缘风险已暴露</td></tr>
+  <tr><td>现金/短期国债</td><td>25-30%</td><td>等待市场重定价后的机会</td></tr>
+  <tr><td>黄金/防御</td><td>10-15%</td><td>地缘风险溢价（伊朗冲突）</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>美股内部配置</h3>
+<table>
+  <tr><th>方向</th><th>建议</th></tr>
+  <tr><td>NVDA / GOOGL / META</td><td>🟢 持有（估值+增长合理）</td></tr>
+  <tr><td>AAPL / TSLA</td><td>🟠 减持（增速不支撑估值）</td></tr>
+  <tr><td>小盘股（R2000）</td><td>🔴 减持（盈利转负+信贷收紧）</td></tr>
+  <tr><td>区域银行</td><td>🔴 减持（阶段 9 直接承压）</td></tr>
+  <tr><td>低端消费（DG）</td><td>🔴 减持（客户群崩溃）</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ========== 五、触发器 ========== -->
+<h2 id="triggers">五、触发器监控清单</h2>
+
+<h3>升级触发器（加速减仓）</h3>
+<table>
+<tr><th>触发器</th><th>状态（点击跳实时数据）</th><th>触发后动作</th></tr>
+<tr>
+  <td>VIX &gt; 25 持续 3 天
+    <span class="info" data-tip="突破 25 持续 3 天=阶段 11 预警启动。">i</span>
+  </td>
+  <td>⚠️ 4 月初曾触发<br><a class="src" href="https://www.cboe.com/tradable_products/vix/" target="_blank" rel="noopener">Cboe 实时 ↗</a></td>
+  <td>阶段 11 预警 → 仓位降 10%</td>
+</tr>
+<tr>
+  <td>VIX &gt; 40
+    <span class="info" data-tip="极度恐慌。2020-03 到 82，2008-10 到 80。">i</span>
+  </td>
+  <td>✅ 已触发过（年内到 60）<br><a class="src" href="https://www.cboe.com/tradable_products/vix/" target="_blank" rel="noopener">Cboe 实时 ↗</a></td>
+  <td>全面防御——若再次触发，仓位降至 10%</td>
+</tr>
+<tr>
+  <td>HY 利差 &gt; 500bp
+    <span class="info" data-tip="市场定价衰退。2008 年峰值 2000bp。">i</span>
+  </td>
+  <td>待验证<br><a class="src" href="https://fred.stlouisfed.org/series/BAMLH0A0HYM2" target="_blank" rel="noopener">FRED BAMLH0A0HYM2 ↗</a></td>
+  <td>阶段 11 启动 → 仓位降至 20-30%</td>
+</tr>
+<tr>
+  <td>非农连续 2 月为负
+    <span class="info" data-tip="NFP 负增长=就业市场崩塌。">i</span>
+  </td>
+  <td>❌ 未触发<br><a class="src" href="https://www.bls.gov/news.release/empsit.toc.htm" target="_blank" rel="noopener">BLS ↗</a></td>
+  <td>阶段 10 全红 → 仓位降至 30%</td>
+</tr>
+<tr>
+  <td>WMT CEO 提及"发薪日效应"
+    <span class="info" data-tip="2007 Q2 出现过。消费端极端信号。">i</span>
+  </td>
+  <td>❌ 未触发<br><a class="src" href="https://stock.walmart.com/investors/events-and-presentations/default.aspx" target="_blank" rel="noopener">WMT 投关 ↗</a></td>
+  <td>消费端极端信号 → 仓位降 10%</td>
+</tr>
+<tr>
+  <td>JPM / BAC 核销率加速
+    <span class="info" data-tip="若大银行核销加速=压力传到主流客户。">i</span>
+  </td>
+  <td>❌ 未触发<br>
+    <a class="src" href="https://www.jpmorganchase.com/ir/quarterly-earnings" target="_blank" rel="noopener">JPM ↗</a>
+    /
+    <a class="src" href="https://investor.bankofamerica.com/quarterly-earnings" target="_blank" rel="noopener">BAC ↗</a>
+  </td>
+  <td>压力传到大行 → 阶段 9 升级 🔴</td>
+</tr>
+<tr>
+  <td>破产年化 &gt; 60 万且加速</td>
+  <td>⏳ 接近（57.4 万，Dec +21% MoM）<br><a class="src" href="https://www.uscourts.gov/statistics-reports/bankruptcy-filings-statistics" target="_blank" rel="noopener">uscourts.gov ↗</a></td>
+  <td>阶段 8 升级 🔴</td>
+</tr>
+<tr>
+  <td>CAPE &gt; 42</td>
+  <td>⏳ 接近（40.44）<br><a class="src" href="https://www.multpl.com/shiller-pe" target="_blank" rel="noopener">multpl.com ↗</a></td>
+  <td>泡沫极端预警</td>
+</tr>
+<tr>
+  <td>Mag 7 中 3 家+下调指引</td>
+  <td>❌ 未触发<br><a class="src" href="https://www.sec.gov/edgar/searchedgar/companysearch.html" target="_blank" rel="noopener">SEC EDGAR ↗</a></td>
+  <td>科技盈利拐点 → 加速减仓</td>
+</tr>
+<tr>
+  <td>招聘率跌破 3.0%</td>
+  <td>⏳ 极接近（3.1%）<br><a class="src" href="https://www.bls.gov/jlt/" target="_blank" rel="noopener">BLS JOLTS ↗</a></td>
+  <td>劳动力市场拐点</td>
+</tr>
+</table>
+
+<h3>缓和触发器（考虑加仓）</h3>
+<table>
+<tr><th>触发器</th><th>当前</th><th>触发后动作</th></tr>
+<tr>
+  <td>SYF 核销率持续低于 5.5% 两季度</td>
+  <td>🟢 可能（5.37%）<br><a class="src" href="https://investors.synchrony.com/" target="_blank" rel="noopener">SYF 财报 ↗</a></td>
+  <td>信用端企稳 → 阶段 5 确认改善</td>
+</tr>
+<tr>
+  <td>次级发卡率回升 &gt; 20%</td>
+  <td>❌（16.43%）<br><a class="src" href="https://www.philadelphiafed.org/consumer-finance/credit-cards" target="_blank" rel="noopener">费城联储 ↗</a></td>
+  <td>银行重新开放信贷</td>
+</tr>
+<tr>
+  <td>辞职率回升 &gt; 2.3%</td>
+  <td>❌（1.9%）<br><a class="src" href="https://www.bls.gov/jlt/" target="_blank" rel="noopener">BLS JOLTS ↗</a></td>
+  <td>劳工市场信心恢复</td>
+</tr>
+<tr>
+  <td>VIX 稳定 &lt; 15 持续 1 个月</td>
+  <td>⏳ 可能（17.94）<br><a class="src" href="https://www.cboe.com/tradable_products/vix/" target="_blank" rel="noopener">Cboe ↗</a></td>
+  <td>地缘风险消退</td>
+</tr>
+<tr>
+  <td>美联储降息 50bp+</td>
+  <td>❌<br><a class="src" href="https://www.federalreserve.gov/monetarypolicy/openmarket.htm" target="_blank" rel="noopener">FOMC ↗</a></td>
+  <td>政策救市信号</td>
+</tr>
+</table>
+
+<!-- ========== 六、核实状态总览 ========== -->
+<h2 id="verify-summary">六、核实状态总览</h2>
+<div class="grid2">
+<div class="card">
+<h3>数据证据分级（2 档）</h3>
+<table>
+<tr><th>级别</th><th>含义</th><th>数据源</th></tr>
+<tr><td><span class="verify v-ok">✅ 已核实</span></td><td>官方机构公开统计 + 公司 SEC 文件（10-K/10-Q/8-K）</td><td>BLS / BEA / 纽约联储 / Cboe / uscourts / SEC EDGAR</td></tr>
+<tr><td><span class="verify v-warn">⚠️ 未核实</span></td><td>估算 / 行业协会 / 公开数据不可得</td><td>RDN、Edmunds、AXP 季报待核、BNPL 占比、EWA 市场规模</td></tr>
+</table>
+<p class="note" style="margin-top:8px;"><span class="earnings-mark">🏛️</span> 小图标表示该数据直接取自公司 SEC 备案文件（具备法律效力）。</p>
+</div>
+
+<div class="card">
+<h3>三届幸存公司（2000/2008/2026 持续上市）</h3>
+<table>
+<tr><th>行业</th><th>公司</th></tr>
+<tr><td>信用卡 / 银行</td><td>COF、AXP、JPM、BAC、WFC</td></tr>
+<tr><td>科技</td><td>AAPL、MSFT、NVDA、AMZN、INTC、CSCO、ORCL、IBM</td></tr>
+<tr><td>零售 / 消费</td><td>WMT、TGT、HD、COST、DLTR、MCD、KO、PG</td></tr>
+<tr><td>汽车 / 运输</td><td>F、KMX、FDX、UPS、UNP、CSX</td></tr>
+</table>
+<p class="note" style="margin-top:8px;">
+  <strong>⚠️ 不可跨届对比：</strong>SYF（2014 IPO）、GOOGL（2004）、META（2012）、TSLA（2010）。
+  <strong>已消亡：</strong>Lehman、Bear Stearns、Washington Mutual（2008 倒闭）。
+</p>
+</div>
+</div>
+
+<div class="important" style="margin-top:16px;">
+<strong>核实纪律：</strong>标 <span class="verify v-warn">⚠️ 未核实</span> 的数据只能作为"方向性信号"，不作为仓位决策主要依据。决策优先用 ✅ 已核实数据，特别是带 <span class="earnings-mark">🏛️</span> 的财报直取数据。
+</div>
+
+<!-- ========== 七、框架局限性 ========== -->
+<h2 id="limits">七、框架局限性</h2>
+<div class="grid2">
+<div class="card">
+<h3>擅长</h3>
+<ul>
+  <li>信用驱动型危机预警（2008 型）</li>
+  <li>K 型分化识别</li>
+  <li>幸存者偏差校正</li>
+  <li>12-24 个月提前预警</li>
+</ul>
+</div>
+<div class="card">
+<h3>不擅长</h3>
+<ul>
+  <li>外部冲击（如伊朗冲突——本次漏了）</li>
+  <li>纯估值泡沫破灭的精确时点</li>
+  <li>BNPL 等影子信贷数据透明度不足</li>
+  <li>精确择时（只给方向不给月份）</li>
+</ul>
+</div>
+</div>
+
+<!-- ========== 八、术语表 ========== -->
+<h2 id="glossary">八、关键术语表</h2>
+<table>
+<tr><th>术语</th><th>解释</th></tr>
+<tr><td>K 型分化</td><td>经济复苏中高收入和低收入群体走向相反方向（像字母 K）</td></tr>
+<tr><td>幸存者偏差</td><td>只看"还在系统内的人"的数据，忽略被踢出的人，导致虚假乐观</td></tr>
+<tr><td>领先/同步/滞后指标</td><td>领先 = 提前 3-12 月反映拐点；同步 = 与经济同步变化；滞后 = 经济变化后才显现</td></tr>
+<tr><td>CAPE</td><td>席勒市盈率。股价 ÷ 过去 10 年通胀调整后平均每股盈利</td></tr>
+<tr><td>VIX</td><td>恐慌指数。标普 500 期权隐含波动率（&lt;20 正常 / &gt;30 恐慌 / &gt;40 极度恐慌）</td></tr>
+<tr><td>净核销率 (NCO)</td><td>银行确认无法收回的贷款金额占比。比逾期率更难粉饰</td></tr>
+<tr><td>BNPL</td><td>先买后付（Buy Now Pay Later）。分 3-4 期免息，不需信用卡</td></tr>
+<tr><td>EWA</td><td>提前领薪（Earned Wage Access）。付费提前拿工资，说明月底没钱</td></tr>
+<tr><td>JOLTS</td><td>美国劳工统计局月度职位空缺和劳动力流动调查</td></tr>
+<tr><td>LEI</td><td>Conference Board 领先经济指标。10 子指标综合，预测经济转折</td></tr>
+<tr><td>SLOOS</td><td>美联储季度调查——银行信贷标准是收紧还是放松</td></tr>
+<tr><td>CECL / ACL</td><td>Current Expected Credit Loss / Allowance for Credit Losses。银行前瞻性计提准备金</td></tr>
+<tr><td>Mag 7</td><td>Magnificent Seven——NVDA/AAPL/MSFT/GOOGL/AMZN/META/TSLA</td></tr>
+<tr><td>发薪日效应</td><td>消费者月初大买月底断粮。WMT CEO 2007 年描述过，是极端现金流紧张的信号</td></tr>
+<tr><td>收益率曲线倒挂</td><td>短期国债收益率 &gt; 长期。倒挂后 12 个月是衰退高危期</td></tr>
+</table>
+
+<div style="text-align:center; padding:40px 20px; color:var(--muted); font-size:0.85em; border-top:1px solid var(--border); margin-top:40px;">
+  <p><strong>免责声明：</strong>本报告基于公开数据分析，不构成投资建议。所有数据来源已标注，读者应独立验证。</p>
+  <p>生成时间：2026-04-18 | 框架版本：v7.0（左右分栏 / 详细结论 / 指标分类） | 下次更新：2026 年 5 月中旬（WMT/TGT/DG 财报后）</p>
+</div>
+
+</div><!-- /container -->
+
+<script>
+(function(){
+  const panels = document.querySelectorAll('.tab-panel');
+  const sideBtns = document.querySelectorAll('#side-nav .side-btn');
+  const boxes = document.querySelectorAll('#stage-bar .stage-box');
+
+  function activate(id){
+    panels.forEach(p => p.classList.toggle('active', p.id === id));
+    sideBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    boxes.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+  }
+
+  function scrollToStages(){
+    const anchor = document.getElementById('stages');
+    if (anchor) anchor.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  sideBtns.forEach(b => b.addEventListener('click', () => {
+    activate(b.dataset.tab);
+    scrollToStages();
+  }));
+  boxes.forEach(b => b.addEventListener('click', () => {
+    activate(b.dataset.tab);
+    scrollToStages();
+  }));
+  // 保险：页面加载后强制 t1 为默认激活，防止浏览器缓存/哈希等异常状态
+  activate('t1');
+})();
+</script>
+
+</body>
+</html>

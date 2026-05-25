@@ -1,0 +1,22 @@
+# 用户数据（定期产出的报告，不随 skill 分发）
+分析结论/
+outputs/
+reports/
+
+# macOS
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code 本地状态
+.claude/
+*.log
+
+# 临时文件
+tmp/
+*.tmp
+*.bak
